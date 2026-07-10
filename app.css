@@ -91,6 +91,29 @@
     box-shadow:0 12px 34px rgba(99,102,241,.12);padding:8px 8px 14px;margin-top:26px;}
   .partHead{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--accent);
     letter-spacing:.04em;padding:16px 16px 8px;border-bottom:1px solid var(--line);margin:0 6px;}
+
+  /* lessons shown as a grid of app tiles */
+  .lessonGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));
+    gap:20px 10px;padding:18px 14px 10px;}
+  .lessonTile{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;}
+  .lessonTile .lIcon{position:relative;width:66px;height:66px;border-radius:17px;color:#fff;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0) 52%),
+      linear-gradient(160deg,var(--c2),var(--c1));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 14px rgba(30,27,55,.20), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -4px 9px rgba(0,0,0,.12);
+    transition:transform .2s cubic-bezier(.2,.7,.2,1), box-shadow .2s;}
+  .lessonTile .lGlyph{font-size:32px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.22));}
+  .lessonTile:hover .lIcon,.lessonTile:focus-visible .lIcon{
+    transform:translateY(-4px) scale(1.06);
+    box-shadow:0 13px 24px rgba(30,27,55,.30), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -4px 9px rgba(0,0,0,.12);}
+  .lessonTile .lName{margin-top:9px;font-size:12px;font-weight:700;text-align:center;
+    line-height:1.25;color:var(--ink);max-width:100px;}
+  .lessonTile.done .lName{color:var(--soft);}
+  .lessonTile .lDone{position:absolute;top:-5px;right:-5px;width:21px;height:21px;border-radius:50%;
+    background:var(--good);color:#fff;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.25);}
+
   .chapter{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;
     padding:13px 16px;border-radius:12px;margin:2px 6px;transition:background .15s;}
   a.chapter:hover{background:#f5f3ff;}

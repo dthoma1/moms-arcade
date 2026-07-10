@@ -51,6 +51,16 @@ function bookDoneCount(b){ if(b.soon) return 0;
 /* Placeholder app-icon glyphs (emoji for now; swap for real art later). */
 const ICONS={macbook:"💻",ai:"🤖",internet:"🌐",companies:"🏢",social:"💬"};
 
+/* Per-lesson glyphs (emoji placeholders for now; swap for real art later). */
+const GAMEICON={
+  taps:"👆",trackpad:"🖐️",select:"🔲",window:"🪟",menus:"📋",controls:"🎛️",dock:"📌",install:"📦",
+  finder:"🗂️",finder2:"🗺️",files:"📄",folders:"📁",spotlight:"🔦",koreankb:"🇰🇷",text:"📝",keyboard:"⌨️",
+  passwords:"🔒",passwords2:"🔐",passwords3:"🔑",passwords4:"🗝️",
+  safari:"🧭",search:"🔎",mail:"✉️",scam:"⚠️",tricks:"🎭",privacy:"🤫",undo:"↩️",
+  chatbot:"💬",prompts:"💭",song:"🎵",audio:"🎧",canva:"🎬",aimodels:"🧠",videoedit:"✂️",ytupload:"📺",
+  youtube:"▶️",instagram:"📸",kakao:"🗨️",naver:"🟢",
+};
+
 function tileInner(b){
   return `<div class="tile ${b.soon?'soon':''}" style="--c1:${b.c1};--c2:${b.c2}">
     ${b.soon?`<div class="soonTag">${UI.soon[LANG]}</div>`:''}
@@ -116,20 +126,20 @@ function renderDetail(id){
       toc.appendChild(row);
     });
   } else {
-    let n=0;
     b.parts.forEach(part=>{
       const head=document.createElement("div"); head.className="partHead"; head.textContent=T(part,'t');
       toc.appendChild(head);
+      const grid=document.createElement("div"); grid.className="lessonGrid";
       part.games.forEach(g=>{
-        n++;
-        const a=document.createElement("a"); a.className="chapter"+(DONE(g.key)?" done":"");
+        const a=document.createElement("a"); a.className="lessonTile"+(DONE(g.key)?" done":"");
         a.href=BASE+g.url; a.target="_blank"; a.rel="noopener";
-        a.innerHTML=`<div class="chNum">${n}</div>
-          <div class="chBody"><div class="chTitle">${LANG==='ko'?g.tko:g.ten}</div>
-          <div class="chSub">${LANG==='ko'?g.sko:g.sen}</div></div>
-          <div class="chRight">${DONE(g.key)?"✓":UI.start[LANG]}</div>`;
-        toc.appendChild(a);
+        a.style.setProperty("--c1",b.c1); a.style.setProperty("--c2",b.c2);
+        a.title=(LANG==='ko'?g.sko:g.sen);
+        a.innerHTML=`<div class="lIcon"><span class="lGlyph">${GAMEICON[g.key]||"🎮"}</span>${DONE(g.key)?'<span class="lDone">✓</span>':''}</div>
+          <div class="lName">${LANG==='ko'?g.tko:g.ten}</div>`;
+        grid.appendChild(a);
       });
+      toc.appendChild(grid);
     });
   }
 }
