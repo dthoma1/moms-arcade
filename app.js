@@ -64,7 +64,6 @@ const UI={
   start:{ko:"열기 ▶",en:"Open ▶"},
   chapters:{ko:(n)=>`${n}개의 수업`,en:(n)=>`${n} lessons`},
   contents:{ko:"목차",en:"Contents"},
-  promise:{ko:"광고 없이. 사기 없이. 링크만 보내 주세요.",en:"No ads. No scams. Just send the link."},
   supportKofi:{ko:"☕ 커피 한 잔 후원하기",en:"☕ Buy me a coffee"},
   supportSponsors:{ko:"💗 GitHub으로 후원하기",en:"💗 Sponsor on GitHub"},
   newsletterCta:{ko:"✉️ 새 수업 소식 받기",en:"✉️ Get new-lesson updates"},
@@ -124,7 +123,6 @@ function renderShelf(){
   document.getElementById("kicker").textContent=UI.kicker[LANG];
   document.getElementById("mastTitle").textContent=UI.title[LANG];
   document.getElementById("mastLede").textContent=UI.lede[LANG];
-  document.getElementById("promise").textContent=UI.promise[LANG];
   document.getElementById("foot").innerHTML=buildFooter();
   const shelf=document.getElementById("shelf"); shelf.innerHTML="";
   BOOKS.forEach(b=>{

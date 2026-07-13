@@ -33,8 +33,6 @@
   .lede{font-family:var(--sans);color:var(--soft);font-size:clamp(17px,2.4vw,22px);
     margin:14px auto 0;max-width:660px;line-height:1.55;}
   .rule{width:64px;height:4px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));margin:22px auto 0;}
-  .promise{font-family:var(--sans);font-weight:800;color:var(--ink);
-    font-size:clamp(15px,2vw,19px);margin:16px auto 0;letter-spacing:.01em;}
 
   /* ---- shelf ---- */
   #shelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));
