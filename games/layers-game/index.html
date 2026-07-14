@@ -78,6 +78,13 @@
   .tip{font-size:15px;color:#374151;background:#eef2ff;border-radius:12px;padding:9px 14px;max-width:600px;text-align:center;}
   .tip.good{background:#ecfdf5;color:#065f46;}
 
+  /* pulsing focus ring — draws Mom's eye to the exact spot to touch */
+  .focusRing{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
+    border:3px solid var(--accent2);background:rgba(236,72,153,.10);pointer-events:none;z-index:8;
+    animation:focusPulse 1.4s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{box-shadow:0 0 0 0 rgba(236,72,153,.45);transform:scale(1);}
+    50%{box-shadow:0 0 0 11px rgba(236,72,153,0);transform:scale(1.14);}}
+
   #successOverlay{position:absolute;left:8px;right:8px;bottom:8px;background:#f2fdf6;border:2px solid var(--good);
     box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:20;padding:12px 14px;}
   #successOverlay .be{font-size:38px;animation:pop .5s ease;}
@@ -201,13 +208,25 @@ function makeCanvas(stage, defs, opts){
   stage.innerHTML=(opts.toolbar?toolbarHTML():``)+`<div id="canvas"></div>`+(opts.tip?`<div class="tip" id="tipBox">${T(opts.tip)}</div>`:``);
   const canvas=stage.querySelector("#canvas");
   const shapes=defs.map((d,i)=>({id:d.id||("s"+i),x:d.x,y:d.y,w:d.w,h:d.h,rot:d.rot||0,fill:d.fill,text:d.text||"",tc:d.tc||"#fff"}));
-  let sel=opts.select||null, scope="shape";
+  let sel=opts.select||null, scope="shape", focusEl=null;
   const ctrl={onEvent:function(){}, shapes, get sel(){return sel;}, select:doSelect, order:()=>shapes.map(s=>s.id)};
   function shape(id){ return shapes.find(s=>s.id===id); }
   function copy(s){ return {id:s.id,x:s.x,y:s.y,w:s.w,h:s.h,rot:s.rot}; }
   function emit(ev,data){ try{ ctrl.onEvent(ev,data); }catch(e){} }
   function tip(txt,good){ const t=stage.querySelector("#tipBox"); if(t){ t.innerHTML=T(txt); t.classList.toggle("good",!!good);} }
   ctrl.tip=tip;
+
+  function clearFocus(){ if(focusEl){ focusEl.remove(); focusEl=null; } }
+  ctrl.clearFocus=clearFocus;
+  ctrl.focusOn=function(target){ clearFocus(); requestAnimationFrame(()=>{
+    let cx,cy;
+    if(typeof target==="string"){ const el=canvas.querySelector(target); if(!el) return;
+      const r=el.getBoundingClientRect(), cr=canvas.getBoundingClientRect();
+      cx=r.left+r.width/2-cr.left; cy=r.top+r.height/2-cr.top;
+    } else { cx=target.x; cy=target.y; }
+    const ring=document.createElement("div"); ring.className="focusRing";
+    ring.style.left=cx+"px"; ring.style.top=cy+"px"; canvas.appendChild(ring); focusEl=ring;
+  }); };
 
   if(opts.target){ const t=document.createElement("div"); t.className="target"; t.style.left=opts.target.x+"px";
     t.style.top=opts.target.y+"px"; t.style.width=opts.target.w+"px"; t.style.height=opts.target.h+"px";
@@ -238,6 +257,7 @@ function makeCanvas(stage, defs, opts){
 
   let lastTap={id:null,t:0};
   canvas.addEventListener("pointerdown",e=>{
+    clearFocus();
     const h=e.target.closest(".h"); const objEl=e.target.closest(".obj");
     if(h && objEl){ e.preventDefault(); startDrag(e,objEl.dataset.id,h.dataset.k); return; }
     if(objEl){
@@ -351,6 +371,7 @@ const LESSONS=[
     hint:{ko:"한 번 클릭 = 도형(틀) 전체가 선택돼요.",en:"One click = the whole shape (frame) is selected."},
     render(stage,done){
       CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#3b82f6",text:T({ko:"제목",en:"Title"})}]);
+      CANVAS.focusOn(".obj");
       CANVAS.onEvent=(ev)=>{ if(ev==="select") once(done,"🟦",{ko:"도형 전체가 선택됐어요! 🎉",en:"The whole shape is selected! 🎉"}); };
     }},
 
@@ -359,6 +380,7 @@ const LESSONS=[
     hint:{ko:"두 번 클릭하면 더 깊이 들어가 글자가 선택돼요.",en:"Double-clicking goes deeper and selects the text."},
     render(stage,done){
       CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#8b5cf6",text:T({ko:"제목",en:"Title"})}],{select:"card"});
+      CANVAS.focusOn(".obj");
       CANVAS.onEvent=(ev)=>{ if(ev==="scope") once(done,"🔤",{ko:"글자 편집 단계로 들어왔어요! 이제 글자를 고칠 수 있어요 🎉",en:"You're in the text now! You can edit the words 🎉"}); };
     }},
 
@@ -367,6 +389,7 @@ const LESSONS=[
     hint:{ko:"빈 곳을 누르면 선택이 풀리고 한 단계 밖으로 나와요.",en:"Clicking empty deselects and steps you back out a level."},
     render(stage,done){
       CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#ec4899",text:T({ko:"제목",en:"Title"})}],{select:"card"});
+      CANVAS.focusOn({x:110,y:90});
       CANVAS.onEvent=(ev)=>{ if(ev==="deselect") once(done,"⬜",{ko:"밖으로 잘 나왔어요! 🎉",en:"You stepped back out! 🎉"}); };
     }},
 
@@ -378,6 +401,7 @@ const LESSONS=[
         {id:"red",x:210,y:150,w:200,h:150,fill:"#ef4444",text:T({ko:"빨강",en:"Red"})},
         {id:"blue",x:300,y:210,w:200,h:150,fill:"#3b82f6",text:T({ko:"파랑",en:"Blue"})}
       ],{toolbar:true,tip:{ko:"빨간 카드를 눌러 선택한 뒤 ‘맨 앞으로’를 누르세요.",en:"Select the red card, then press ‘To front’."}});
+      CANVAS.focusOn({x:255,y:185});
       CANVAS.onEvent=(ev,d)=>{ if(ev==="reorder"){ const o=d.order; if(o[o.length-1]==="red") once(done,"⤒",{ko:"빨간 카드를 맨 앞으로 올렸어요! 🎉",en:"You brought the red card to the front! 🎉"}); } };
     }},
 
@@ -389,6 +413,7 @@ const LESSONS=[
         {id:"red",x:210,y:150,w:200,h:150,fill:"#ef4444",text:T({ko:"빨강",en:"Red"})},
         {id:"blue",x:300,y:210,w:200,h:150,fill:"#3b82f6",text:T({ko:"파랑",en:"Blue"})}
       ],{toolbar:true,tip:{ko:"파란 카드를 눌러 선택한 뒤 ‘맨 뒤로’를 누르세요.",en:"Select the blue card, then press ‘To back’."}});
+      CANVAS.focusOn('.obj[data-id="blue"]');
       CANVAS.onEvent=(ev,d)=>{ if(ev==="reorder"){ const o=d.order; if(o[0]==="blue") once(done,"⤓",{ko:"파란 카드를 맨 뒤로 보냈어요! 이제 빨강이 앞에 보여요 🎉",en:"You sent the blue card to the back! Now red shows in front 🎉"}); } };
     }},
 ];
