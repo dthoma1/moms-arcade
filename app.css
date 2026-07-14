@@ -138,8 +138,6 @@
     padding:9px 16px;font-size:14px;font-weight:700;color:var(--ink);
     box-shadow:0 2px 6px rgba(0,0,0,.05);}
   footer .footLink:hover{border-color:var(--accent);color:var(--accent);}
-  footer .footPromise{font-family:var(--sans);font-style:normal;font-weight:700;
-    color:var(--soft);font-size:13px;margin-top:16px;letter-spacing:.01em;}
 
   @media (max-width:520px){
     #shelf{gap:40px 18px;}

@@ -68,7 +68,6 @@ const UI={
   supportSponsors:{ko:"💗 GitHub으로 후원하기",en:"💗 Sponsor on GitHub"},
   newsletterCta:{ko:"✉️ 새 수업 소식 받기",en:"✉️ Get new-lesson updates"},
   orgCta:{ko:"🏛️ 기관·단체용 문의",en:"🏛️ For libraries & organizations"},
-  footPromise:{ko:"광고 없음 · 사기 없음 · 여러분의 정보를 절대 팔지 않아요",en:"No ads · No scams · We never sell your data"},
 };
 
 function bookGamesCount(b){ return b.soon?0:b.parts.reduce((s,p)=>s+p.games.length,0); }function bookDoneCount(b){ if(b.soon) return 0;
@@ -106,8 +105,7 @@ function buildFooter(){
     footLink(CONFIG.orgInquiryUrl, UI.orgCta[LANG]),
   ].filter(Boolean).join("");
   return `<div class="footLove">${UI.foot[LANG]}</div>`+
-    (links?`<div class="footLinks">${links}</div>`:"")+
-    `<div class="footPromise">${UI.footPromise[LANG]}</div>`;
+    (links?`<div class="footLinks">${links}</div>`:"");
 }
 /* GoatCounter: cookieless, no personal data. Loads only when configured. */
 function loadAnalytics(){
