@@ -33,6 +33,7 @@
   #introText b{color:var(--accent);}
   .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;font-size:30px;}
   .scene .arw{color:#9ca3af;font-size:24px;}
+  .beziersvg{display:inline-block;width:58px;height:54px;vertical-align:middle;}
   .introBtns{display:flex;gap:12px;margin-top:6px;}
   .big{font-size:17px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
     border:none;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
@@ -58,9 +59,11 @@
   .pxgrid{display:grid;grid-template-columns:repeat(8,var(--cs,10px));grid-template-rows:repeat(8,var(--cs,10px));
     transition:transform .12s ease,filter .12s ease;background:#fff;}
   .pxgrid.lines .pxcell{outline:1px solid rgba(0,0,0,.12);outline-offset:-0.5px;}
-  .pxcell{width:var(--cs,10px);height:var(--cs,10px);}
+  .pxcell{width:var(--cs,10px);height:var(--cs,10px);transition:background .18s ease;}
   .zoomBtn{font-size:15px;font-weight:800;color:var(--accent);background:#eef2ff;border:2px solid #c7d2fe;border-radius:999px;padding:9px 18px;cursor:pointer;}
   .zoomBtn:hover{background:#e0e7ff;}
+  .pxword{font-size:13px;font-weight:800;color:#6b7280;text-align:center;letter-spacing:.2px;}
+  .pxword b{color:var(--accent);}
 
   /* slider */
   .scaleWrap{width:min(340px,86%);display:flex;flex-direction:column;gap:8px;align-items:center;}
@@ -255,8 +258,43 @@ function pxGridHTML(){
   }
   return cells;
 }
+function pxGridBlank(){
+  let cells="", i=0;
+  for(const row of HEART) for(const v of row){
+    cells+=`<div class="pxcell" data-i="${i}" data-on="${v}" style="background:#fff"></div>`; i++;
+  }
+  return cells;
+}
 const HEART_SVG=`<svg viewBox="0 0 32 29" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
   <path d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z" fill="#ec4899"/></svg>`;
+
+/* animated heart drawn with bezier curves (used on the vector intro slide) */
+const BEZIER_HEART=`<span class="beziersvg"><svg viewBox="-3 -4 38 35" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <style>
+    .bz-fill{fill:#ec4899;opacity:0;animation:bzfill 4s ease-in-out infinite;}
+    .bz-line{fill:none;stroke:#be185d;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+      stroke-dasharray:100;stroke-dashoffset:100;animation:bzdraw 4s ease-in-out infinite;}
+    .bz-h{opacity:0;animation:bzhand 4s ease-in-out infinite;}
+    .bz-h line{stroke:#6366f1;stroke-width:.5;stroke-dasharray:1.4 1.2;}
+    .bz-h circle{fill:#6366f1;}
+    .bz-h rect{fill:#fff;stroke:#6366f1;stroke-width:.7;}
+    @keyframes bzdraw{0%{stroke-dashoffset:100;opacity:1;}40%{stroke-dashoffset:0;opacity:1;}88%{opacity:1;}100%{stroke-dashoffset:0;opacity:0;}}
+    @keyframes bzfill{0%,40%{opacity:0;}52%{opacity:1;}88%{opacity:1;}100%{opacity:0;}}
+    @keyframes bzhand{0%,6%{opacity:0;}16%{opacity:1;}44%{opacity:1;}54%{opacity:0;}100%{opacity:0;}}
+  </style>
+  <path class="bz-fill" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
+  <path class="bz-line" pathLength="100" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
+  <g class="bz-h">
+    <line x1="8" y1="1" x2="3.5" y2="1"/><line x1="8" y1="1" x2="12.5" y2="1"/>
+    <line x1="24" y1="1" x2="19.5" y2="1"/><line x1="24" y1="1" x2="28.5" y2="1"/>
+    <circle cx="3.5" cy="1" r=".9"/><circle cx="12.5" cy="1" r=".9"/>
+    <circle cx="19.5" cy="1" r=".9"/><circle cx="28.5" cy="1" r=".9"/>
+    <rect x="7.1" y=".1" width="1.8" height="1.8" rx=".3"/>
+    <rect x="23.1" y=".1" width="1.8" height="1.8" rx=".3"/>
+    <rect x="15.1" y="4.1" width="1.8" height="1.8" rx=".3"/>
+    <rect x="15.1" y="27.1" width="1.8" height="1.8" rx=".3"/>
+  </g>
+</svg></span>`;
 
 /* ---------- L1: bitmap = pixels (zoom to reveal) ---------- */
 function renderPixels(done){
@@ -273,6 +311,26 @@ function renderPixels(done){
     const lab=panel.querySelector(".stageLabel");
     lab.innerHTML=T({ko:"가까이서 보니 작은 <b>점(픽셀)</b>이 잔뜩! 이게 비트맵이에요 🔎",en:"Up close it's lots of tiny <b>dots (pixels)</b>! That's a bitmap 🔎"});
     setTimeout(()=>{ chime(); once(done,"🔬",{ko:"비트맵은 작은 점(픽셀)들이 모여 만든 그림이에요 🎉",en:"A bitmap is a picture built from tiny dots (pixels) 🎉"}); },700);
+  });
+  focusSel(".zoomBtn");
+}
+
+/* ---------- L2: pixels — the screen's secret grid ---------- */
+function renderPixelGrid(done){
+  stage.innerHTML=`<div class="panel">
+    <div class="stageLabel">${T({ko:"컴퓨터·TV·휴대폰 화면엔 <b>비밀 격자</b>가 숨어 있어요",en:"Your computer, TV & phone screens hide a <b>secret grid</b>"})}</div>
+    <div class="pxstage"><div class="pxgrid lines" style="--cs:26px">${pxGridBlank()}</div></div>
+    <div class="pxword">${T({ko:"픽셀(pixel) = <b>Pic</b>ture(그림) + <b>El</b>ement(요소)",en:"<b>Pixel</b> = <b>Pic</b>ture + <b>El</b>ement"})}</div>
+    <button class="zoomBtn">🎨 ${T({ko:"픽셀에 색을 켜기",en:"Light up the pixels"})}</button>
+  </div>`;
+  const panel=stage.querySelector(".panel"), grid=stage.querySelector(".pxgrid"), btn=stage.querySelector(".zoomBtn");
+  btn.addEventListener("click",()=>{
+    clearFocus(); clickSnd(); btn.disabled=true; btn.style.opacity=".5";
+    const on=[...grid.querySelectorAll('.pxcell[data-on="1"]')];
+    on.forEach((c,k)=>setTimeout(()=>{ c.style.background="#ec4899"; if(k%6===0) clickSnd(); }, 80+k*55));
+    const lab=panel.querySelector(".stageLabel");
+    setTimeout(()=>{ lab.innerHTML=T({ko:"네모마다 색이 바뀌니 <b>하트</b>가 나타났어요! 네모 하나가 <b>픽셀</b>이에요 🩷",en:"Each square changed color and a <b>heart</b> appeared! One square is one <b>pixel</b> 🩷"}); }, 80+Math.round(on.length*55*0.5));
+    setTimeout(()=>{ chime(); once(done,"🔲",{ko:"화면은 색을 바꾸는 픽셀 격자예요 — 그래서 그림·글자·영상이 보여요 🎉",en:"A screen is a grid of color-changing pixels — that's how you see pictures, text & video 🎉"}); }, 80+on.length*55+250);
   });
   focusSel(".zoomBtn");
 }
@@ -369,19 +427,23 @@ const LESSONS=[
     instr:{ko:"사진(비트맵)을 <b>확대</b>해서 무엇으로 이루어졌는지 봐요. 🔍 버튼을 눌러 보세요.",en:"<b>Zoom in</b> on a photo (bitmap) to see what it's made of. Tap the 🔍 button."},
     hint:{ko:"사진, 스크린샷은 모두 비트맵이에요 — 작은 색 점(픽셀)이 모인 거예요.",en:"Photos and screenshots are all bitmaps — grids of tiny colored dots (pixels)."},
     render:renderPixels },
-  { title:{ko:"② 크게 하면 흐려져요",en:"② It blurs when enlarged"},
+  { title:{ko:"② 픽셀 = 화면의 격자",en:"② Pixels = the screen's grid"},
+    instr:{ko:"화면·TV·휴대폰은 모두 작은 네모(픽셀) 격자예요. 버튼을 눌러 픽셀들이 색을 바꿔 그림이 되는 걸 보세요.",en:"Screens, TVs & phones are all grids of tiny squares (pixels). Tap the button to watch the pixels change color into a picture."},
+    hint:{ko:"픽셀(pixel)은 ‘Picture(그림)+Element(요소)’의 줄임말이에요. 각 픽셀이 색을 바꿔 사진·글자·영상을 만들어요.",en:"‘Pixel’ is short for ‘Picture Element’. Each pixel changes color to make photos, text and video."},
+    render:renderPixelGrid },
+  { title:{ko:"③ 크게 하면 흐려져요",en:"③ It blurs when enlarged"},
     instr:{ko:"비트맵을 아주 <b>크게</b> 늘려 보세요 (손잡이를 끝까지). 어떻게 되나요?",en:"Stretch the bitmap really <b>big</b> (slide to the end). What happens?"},
     hint:{ko:"점의 개수는 정해져 있어요. 크게 하면 점이 커져서 흐릿·울퉁불퉁해져요.",en:"There's a fixed number of dots. Enlarging makes each dot big, so it looks blurry."},
     render:renderBitmapScale },
-  { title:{ko:"③ 비트맵 파일 형식",en:"③ Bitmap file types"},
+  { title:{ko:"④ 비트맵 파일 형식",en:"④ Bitmap file types"},
     instr:{ko:"비트맵(사진) 파일을 모두 골라 보세요: <b>.jpg · .png · .bmp</b>",en:"Tap all the bitmap (photo) files: <b>.jpg · .png · .bmp</b>"},
     hint:{ko:"사진을 저장하면 보통 jpg나 png예요. 카메라 사진, 캡처 화면이 여기에 속해요.",en:"Saved photos are usually jpg or png. Camera photos and screenshots are these."},
     render:renderBitmapFormats },
-  { title:{ko:"④ 벡터는 안 흐려져요",en:"④ Vector never blurs"},
+  { title:{ko:"⑤ 벡터는 안 흐려져요",en:"⑤ Vector never blurs"},
     instr:{ko:"이번엔 <b>벡터</b> 그림을 똑같이 아주 크게 늘려 보세요. 흐려질까요?",en:"Now stretch a <b>vector</b> picture just as big. Will it blur?"},
     hint:{ko:"벡터는 ‘여기서 여기로 곡선’ 같은 그리는 방법이라, 크기마다 새로 또렷하게 그려요.",en:"A vector is instructions like ‘curve from here to here’, so it's redrawn sharp at every size."},
     render:renderVectorScale },
-  { title:{ko:"⑤ 벡터 파일 형식",en:"⑤ Vector file types"},
+  { title:{ko:"⑥ 벡터 파일 형식",en:"⑥ Vector file types"},
     instr:{ko:"벡터 파일을 모두 골라 보세요: <b>.svg · .eps · .ai</b>",en:"Tap all the vector files: <b>.svg · .eps · .ai</b>"},
     hint:{ko:"벡터는 열고 고치려면 특별한 프로그램(일러스트레이터·잉크스케이프 등)이 필요해요.",en:"To open & edit vectors you need special software (Illustrator, Inkscape, etc.)."},
     render:renderVectorFormats },
@@ -398,9 +460,9 @@ const INTRO=[
     en:`<div class="scene"><span>📷</span><span class="arw">→</span><span>🟥🟥🟥</span></div>
     A <b>bitmap</b> is a grid of colored <b>dots (pixels)</b>. Photos and screenshots are bitmaps.<br><br>The dots are fixed, so enlarging too much makes them big and <b>blurry</b>.`} },
   { art:"✒️", title:{ko:"벡터 = 그리는 방법",en:"Vector = drawing instructions"},
-    html:{ko:`<div class="scene"><span>✒️</span><span class="arw">→</span><span>💠</span></div>
+    html:{ko:`<div class="scene"><span>✒️</span><span class="arw">→</span>${BEZIER_HEART}</div>
     <b>벡터</b>는 점이 아니라 <b>그리는 방법</b>(선·곡선·색)이에요. 로고·아이콘이 여기 속해요.<br><br>크기마다 새로 그려서 아무리 키워도 <b>또렷</b>해요 — 대신 특별한 프로그램이 필요해요.`,
-    en:`<div class="scene"><span>✒️</span><span class="arw">→</span><span>💠</span></div>
+    en:`<div class="scene"><span>✒️</span><span class="arw">→</span>${BEZIER_HEART}</div>
     A <b>vector</b> isn't dots — it's <b>drawing instructions</b> (lines, curves, colors). Logos and icons are vectors.<br><br>It's redrawn at every size, so it stays <b>sharp</b> — but it needs special software.`} },
 ];
 
