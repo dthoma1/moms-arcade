@@ -183,7 +183,7 @@ function renderDetail(id){
       const grid=document.createElement("div"); grid.className="lessonGrid";
       part.games.forEach(g=>{
         const a=document.createElement("a"); a.className="lessonTile"+(DONE(g.key)?" done":"");
-        a.href=BASE+g.url; a.target="_blank"; a.rel="noopener";
+        a.href=BASE+g.url;
         a.style.setProperty("--c1",b.c1); a.style.setProperty("--c2",b.c2);
         a.title=(LANG==='ko'?g.sko:g.sen);
         a.innerHTML=`<div class="lIcon"><span class="lGlyph">${GAMEICON[g.key]||"🎮"}</span>${DONE(g.key)?'<span class="lDone">✓</span>':''}</div>
