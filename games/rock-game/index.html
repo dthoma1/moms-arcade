@@ -118,6 +118,19 @@
   .toggle.on::after{left:41px;}
   .swlab{font-size:13px;font-weight:800;color:#64748b;}
 
+  /* ===== bulb binary counting (level 3) ===== */
+  .bulb.sm{font-size:60px;}
+  .bigNum{font-size:60px;font-weight:900;color:var(--accent);line-height:1;transition:color .2s;}
+  .bigNum.hit{color:var(--good);animation:pop .4s ease;}
+  .binBulbs{display:flex;gap:34px;justify-content:center;align-items:flex-start;}
+  .bunit{display:flex;flex-direction:column;align-items:center;gap:9px;}
+  .bunit .pv{font-size:12.5px;font-weight:800;color:#64748b;}
+  .bitdots{display:flex;gap:10px;margin-top:2px;}
+  .bitdots .bd{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;background:#e5e7eb;color:#94a3b8;transition:.2s;}
+  .bitdots .bd.cur{background:#fde68a;color:#78350f;box-shadow:0 0 0 3px rgba(245,158,11,.3);}
+  .bitdots .bd.done{background:#22c55e;color:#fff;}
+
   .bitrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
   .bit{display:flex;flex-direction:column;align-items:center;gap:5px;}
   .bcell{width:48px;height:48px;border-radius:11px;background:#e2e8f0;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8;cursor:pointer;transition:.15s;}
@@ -350,6 +363,43 @@ const levels=[
       });
     } },
 
+  { title:{ko:"전구로 숫자 쓰기 · 0부터 3까지",en:"Write numbers with bulbs · 0 to 3"},
+    instr:{ko:"이번엔 전구 두 개로 숫자를 써 봐요! 켜짐=1, 꺼짐=0. 왼쪽 전구는 '2', 오른쪽 전구는 '1'을 뜻해요.",en:"Now let's write numbers with two bulbs! ON=1, OFF=0. The left bulb means '2', the right means '1'."},
+    hint:{ko:"전구를 켜고 꺼서 위에 보이는 숫자를 만들어요.",en:"Turn the bulbs on/off to make the number shown above."},
+    build(st,done){
+      const targets=[0,1,2,3]; let ti=0, busy=false; const bits=[1,1];
+      st.innerHTML=`<div class="stageCol">
+        <div class="subcapt">${T({ko:"이 숫자를 만들어요:",en:"Make this number:"})}</div>
+        <div class="bigNum" id="bn">0</div>
+        <div class="binBulbs">
+          <div class="bunit"><div class="bulb sm on" id="bl0">💡</div><div class="toggle on" id="tg0"></div><div class="pv">${T({ko:"2의 자리",en:"the 2s"})}</div></div>
+          <div class="bunit"><div class="bulb sm on" id="bl1">💡</div><div class="toggle on" id="tg1"></div><div class="pv">${T({ko:"1의 자리",en:"the 1s"})}</div></div>
+        </div>
+        <div class="readout" id="ro"></div>
+        <div class="bitdots" id="bd"></div>
+      </div>`;
+      const BL=[st.querySelector("#bl0"),st.querySelector("#bl1")];
+      const TG=[st.querySelector("#tg0"),st.querySelector("#tg1")];
+      const bn=st.querySelector("#bn"),ro=st.querySelector("#ro"),bd=st.querySelector("#bd");
+      const val=()=>bits[0]*2+bits[1];
+      function renderRO(){ ro.innerHTML=`${bits[0]}${bits[1]} <span style="color:#94a3b8">=</span> <b>${val()}</b>`; }
+      function renderDots(){ bd.innerHTML=targets.map((t,k)=>`<span class="bd ${k<ti?'done':k===ti?'cur':''}">${t}</span>`).join(""); }
+      function renderTarget(){ bn.textContent=targets[ti]; bn.classList.remove("hit"); renderDots(); }
+      function sync(i){ BL[i].classList.toggle("on",!!bits[i]); TG[i].classList.toggle("on",!!bits[i]); }
+      TG.forEach((tg,i)=>tg.addEventListener("click",()=>{
+        if(locked||busy)return; clearFocus(); bits[i]=bits[i]?0:1; beep(bits[i]?720:400,.09); sync(i); renderRO();
+        if(val()===targets[ti]){
+          busy=true; bn.classList.add("hit"); beep(900,.11);
+          setTimeout(()=>{ ti++;
+            if(ti>=targets.length){ done("🔢",{ko:"0, 1, 2, 3을 전구로 다 썼어요!",en:"You wrote 0, 1, 2, 3 with bulbs!"}); }
+            else { busy=false; renderTarget(); renderRO(); }
+          },650);
+        }
+      }));
+      sync(0); sync(1); renderRO(); renderTarget();
+      requestAnimationFrame(()=>focusEl(TG[0]));
+    } },
+
   { title:{ko:"0과 1 · 이진법",en:"0s and 1s · binary"},
     instr:{ko:"켜짐=1, 꺼짐=0. 컴퓨터는 이 0과 1만으로 모든 걸 적어요. 이걸 '이진법'이라고 해요.",en:"ON=1, OFF=0. A computer writes everything using only 0s and 1s. This is called binary."},
     hint:{ko:"아래 칸을 눌러 위 그림과 똑같은 불빛을 만들어 보세요.",en:"Tap the cells below to match the lit pattern shown above."},
@@ -381,37 +431,8 @@ const levels=[
       draw(); st.querySelector("#uval").textContent=T({ko:"지금 = ",en:"now = "})+decimal(bits);
     } },
 
-  { title:{ko:"누가 생각해 냈을까요?",en:"Who thought of this?"},
-    instr:{ko:"0과 1로 생각하는 컴퓨터는 세 수학자의 아이디어가 이어져 태어났어요. 카드를 눌러 만나 보세요.",en:"The 0/1 thinking computer was born from three mathematicians' ideas passed down. Tap each card to meet them."},
-    hint:{ko:"세 사람의 카드를 모두 눌러 보세요.",en:"Tap all three cards to reveal their story."},
-    build(st,done){
-      const inv=[
-        {face:"🧮",nm:{ko:"라이프니츠",en:"Leibniz"},yr:{ko:"1600~1700년대",en:"1600s–1700s"},
-         c:{ko:"0과 1만으로 모든 수를 적는 '이진법'을 정리했어요.",en:"Worked out 'binary' — writing every number with only 0 and 1."}},
-        {face:"✅",nm:{ko:"조지 불",en:"George Boole"},yr:{ko:"1800년대",en:"1800s"},
-         c:{ko:"참(1)과 거짓(0)으로 따지는 '논리'를 만들었어요.",en:"Created 'logic' that reasons with true (1) and false (0)."}},
-        {face:"💡",nm:{ko:"클로드 섀넌",en:"Claude Shannon"},yr:{ko:"1930년대",en:"1930s"},
-         c:{ko:"이 논리를 '전기 스위치'에 연결해, 현대 컴퓨터의 씨앗을 심었어요.",en:"Linked that logic to electric switches — planting the seed of the modern computer."}}
-      ];
-      st.innerHTML=`<div class="stageCol"><div class="invRow" id="row"></div>
-        <div class="subcapt" id="note">${T({ko:"셋 다 눌러 보세요.",en:"Tap all three."})}</div></div>`;
-      const row=st.querySelector("#row"); let opened=0;
-      inv.forEach((p,idx)=>{ const c=document.createElement("div"); c.className="invCard";
-        c.innerHTML=`<div class="face">${p.face}</div><div class="nm">${T(p.nm)}</div><div class="yr">${T(p.yr)}</div>
-          <div class="q">＋</div><div class="contrib">${T(p.c)}</div>`;
-        c.addEventListener("click",()=>{ if(locked||c.classList.contains("open"))return;
-          c.classList.add("open"); beep(600+idx*80,.08); opened++;
-          if(opened>=inv.length){ clearFocus();
-            st.querySelector("#note").textContent=T({ko:"이 셋이 이어져 오늘의 컴퓨터가 됐어요! 🔗",en:"These three, connected, became today's computer! 🔗"});
-            done("🧠",{ko:"세 사람의 아이디어가 이어졌어요!",en:"Three ideas, linked together!"}); }
-        });
-        row.appendChild(c);
-      });
-      requestAnimationFrame(()=>focusEl(row.firstChild));
-    } },
-
   { title:{ko:"트랜지스터 · 아주 작은 스위치",en:"Transistors · tiny switches"},
-    instr:{ko:"섀넌의 스위치를 아주 작게 만든 게 '트랜지스터'예요. 손톱만 한 칩 안에 수십억 개가 들어 있어요!",en:"A 'transistor' is Shannon's switch made microscopic. A fingernail-sized chip holds billions of them!"},
+    instr:{ko:"전기 스위치를 아주 작게 만든 게 '트랜지스터'예요. 손톱만 한 칩 안에 수십억 개가 들어 있어요!",en:"A 'transistor' is an electric switch made microscopic. A fingernail-sized chip holds billions of them!"},
     hint:{ko:"칩을 눌러 안을 확대해 보세요.",en:"Tap the chip to zoom inside."},
     build(st,done){
       st.innerHTML=`<div class="stageCol">
