@@ -97,8 +97,26 @@
   .upfile .fs{font-weight:900;font-size:15px;} .upfile .fs.big{color:var(--bad);} .upfile .fs.ok{color:var(--good);}
   .upctrl{width:min(360px,90%);background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;}
 
-  .toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#fff1f2;border:2px solid #fecdd3;
-    color:#be123c;font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.14);
+  /* resolution lesson */
+  .resStage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center;}
+  .resInfo{font-size:13.5px;font-weight:700;color:#4b5563;line-height:1.5;max-width:340px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;}
+  .resInfo b{color:var(--accent);}
+  .jobcard{width:min(320px,92%);background:linear-gradient(150deg,#0ea5a3,#6366f1);color:#fff;border-radius:14px;padding:14px;box-shadow:0 10px 24px rgba(14,165,163,.28);}
+  .jobcard .je{font-size:40px;}
+  .jobcard .jt{font-size:17px;font-weight:900;margin-top:4px;}
+  .jobcard .js{font-size:13px;opacity:.92;margin-top:2px;}
+  .qlab{font-size:14px;font-weight:800;color:#374151;}
+  .reschips{display:flex;gap:10px;width:min(340px,94%);}
+  .reschips button{flex:1;font-size:16px;font-weight:900;color:#1f2937;background:#fff;border:2px solid #e5e7eb;border-radius:12px;
+    padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:center;}
+  .reschips button span{font-size:11px;font-weight:700;color:#9ca3af;}
+  .reschips button.on{border-color:var(--good);background:#f2fdf6;color:#166534;}
+  .reschips button.on span{color:#166534;}
+  .resdots{display:flex;gap:7px;margin-top:2px;}
+  .resdots .d{width:8px;height:8px;border-radius:50%;background:#d1d5db;}
+  .resdots .d.cur{background:var(--accent);} .resdots .d.done{background:var(--good);}
+
+  .toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#fff1f2;border:2px solid #fecdd3;    color:#be123c;font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.14);
     z-index:30;animation:toastIn .2s ease;text-align:center;max-width:88%;}
   @keyframes toastIn{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
   @keyframes shakeX{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
@@ -271,6 +289,50 @@ function renderExportStart(done){
   focusSel(".shareBtn");
 }
 
+/* ---------- L2: resolution — match it to the job ---------- */
+function renderResolution(done){
+  const JOBS=[
+    { emoji:"🎬", ko:"유튜브 프로필 사진", en:"a YouTube profile picture",
+      subko:"아주 작은 동그라미로 보여요", suben:"shown as a tiny circle",
+      right:"low",
+      okko:"맞아요! 작게 보이니 낮은 해상도로 충분하고 파일도 작아요 🎉", oken:"Right! It shows tiny, so a low resolution looks great and keeps the file small 🎉",
+      badko:"그것도 되지만 너무 커요. 작게 보이는 사진엔 낮은 해상도면 충분해요!", baden:"That works but it's overkill — a tiny picture only needs a low resolution!" },
+    { emoji:"🖼️", ko:"벽에 거는 큰 인화 사진", en:"a big photo printed for the wall",
+      subko:"아주 크게 인쇄해요", suben:"printed very large",
+      right:"high",
+      okko:"맞아요! 크게 인화하려면 픽셀이 많은 높은 해상도가 필요해요 🎉", oken:"Right! Printing big needs lots of pixels — a high resolution 🎉",
+      badko:"낮은 해상도로 크게 인화하면 픽셀이 커져 흐릿해져요. 높은 해상도를 골라요!", baden:"Low resolution printed big gets blurry (the pixels grow). Pick high resolution!" }
+  ];
+  let ji=0;
+  function draw(){
+    const j=JOBS[ji];
+    stage.innerHTML=`<div class="panel"><div class="resStage">
+      <div class="resInfo">${T({ko:"<b>해상도</b>(resolution) = 그림이 가진 <b>픽셀 수</b> (가로×세로). 픽셀이 많을수록 더 크고 또렷하게 쓸 수 있어요.",en:"<b>Resolution</b> = how many <b>pixels</b> a picture has (width×height). More pixels = usable bigger and sharper."})}</div>
+      <div class="jobcard"><div class="je">${j.emoji}</div><div class="jt">${T({ko:j.ko,en:j.en})}</div><div class="js">${T({ko:j.subko,en:j.suben})}</div></div>
+      <div class="qlab">${T({ko:"어떤 해상도가 알맞을까요?",en:"Which resolution fits?"})}</div>
+      <div class="reschips">
+        <button data-r="low">128 × 128<span>${T({ko:"낮은 해상도 · 작은 파일",en:"low res · small file"})}</span></button>
+        <button data-r="high">6000 × 4000<span>${T({ko:"높은 해상도 · 큰 파일",en:"high res · big file"})}</span></button>
+      </div>
+      <div class="resdots">${JOBS.map((_,k)=>`<span class="d ${k<ji?'done':k===ji?'cur':''}"></span>`).join("")}</div>
+    </div></div>`;
+    const panel=stage.querySelector(".panel");
+    stage.querySelectorAll(".reschips button").forEach(b=>b.addEventListener("click",()=>{
+      const r=b.dataset.r; clickSnd();
+      if(r===j.right){
+        clearFocus(); b.classList.add("on");
+        if(ji>=JOBS.length-1){ chime(); once(done,"📐",{ko:"좋아요! 쓰임새에 맞는 해상도를 골랐어요 🎉",en:"Nice — you matched the resolution to the job 🎉"}); }
+        else { chime(); toast(panel,{ko:j.okko,en:j.oken}); ji++; setTimeout(draw,950); }
+      } else {
+        b.classList.add("shakeX"); setTimeout(()=>b.classList.remove("shakeX"),320);
+        toast(panel,{ko:j.badko,en:j.baden});
+      }
+    }));
+    focusSel('.reschips button[data-r="'+j.right+'"]');
+  }
+  draw();
+}
+
 /* ---------- L2: choose a format (png vs jpg) ---------- */
 function renderChooseFormat(done){
   stage.innerHTML=`<div class="panel">${editorTop(false)}
@@ -358,15 +420,19 @@ const LESSONS=[
     instr:{ko:"오른쪽 위 <b>⬇ 공유·다운로드</b>를 누르고, <b>다운로드</b>를 눌러 디자인을 파일로 저장하세요.",en:"Tap <b>⬇ Share · Download</b> at the top right, then <b>Download</b> to save your design as a file."},
     hint:{ko:"디자인은 캔바 안에만 있어요. ‘내보내기’로 그림 파일을 만들어야 밖으로 보낼 수 있어요.",en:"Your design lives inside Canva. ‘Exporting’ makes an image file you can share out."},
     render:renderExportStart },
-  { title:{ko:"② 어떤 형식으로?",en:"② Which format?"},
+  { title:{ko:"② 해상도가 뭐예요?",en:"② What is resolution?"},
+    instr:{ko:"<b>해상도</b>는 그림의 픽셀 수예요. 각 쓰임새에 <b>알맞은 해상도</b>를 골라 보세요.",en:"<b>Resolution</b> is how many pixels a picture has. Pick the <b>right resolution</b> for each use."},
+    hint:{ko:"작게 보이면(프로필 사진) 낮은 해상도로 충분해요. 크게 인화하려면 높은 해상도가 필요해요.",en:"Small uses (a profile pic) only need low resolution. Printing big needs high resolution."},
+    render:renderResolution },
+  { title:{ko:"③ 어떤 형식으로?",en:"③ Which format?"},
     instr:{ko:"이 카드를 웹에 올릴 거예요. 파일을 더 <b>작게</b> 하려면 어떤 형식이 좋을까요?",en:"You'll put this card on the web. Which format keeps the file <b>smaller</b>?"},
     hint:{ko:"PNG는 또렷한 글자·로고·투명 배경에 좋고, JPG는 사진에 좋고 용량이 작아요.",en:"PNG is best for crisp text, logos, transparency; JPG is best for photos and is smaller."},
     render:renderChooseFormat },
-  { title:{ko:"③ 파일 크기 줄이기",en:"③ Make the file smaller"},
+  { title:{ko:"④ 파일 크기 줄이기",en:"④ Make the file smaller"},
     instr:{ko:"<b>품질</b> 손잡이를 내려서 파일 크기를 <b>2MB 이하</b>로 줄여 보세요.",en:"Slide <b>Quality</b> down to shrink the file to <b>2MB or less</b>."},
     hint:{ko:"품질을 조금 낮춰도 눈으로는 거의 똑같아요. 대신 용량이 확 줄어요.",en:"A little less quality looks almost the same, but the size drops a lot."},
     render:renderQuality },
-  { title:{ko:"④ 너무 크면 못 올려요",en:"④ Too big to upload"},
+  { title:{ko:"⑤ 너무 크면 못 올려요",en:"⑤ Too big to upload"},
     instr:{ko:"이 사진은 <b>45.6MB</b>라 사이트가 거절해요. <b>JPG로 바꾸거나 품질을 낮춰</b> 25MB 이하로 만든 뒤 <b>업로드</b>하세요.",en:"This file is <b>45.6MB</b>, too big for the site. <b>Switch to JPG or lower quality</b> to get under 25MB, then <b>Upload</b>."},
     hint:{ko:"유튜브·이메일·웹사이트마다 올릴 수 있는 크기 한도가 있어요. 너무 크면 줄이면 돼요!",en:"YouTube, email, and websites each have size limits. If it's too big, just shrink it!"},
     render:renderUpload },
