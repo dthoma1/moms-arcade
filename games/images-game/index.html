@@ -33,7 +33,22 @@
   #introText b{color:var(--accent);}
   .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;font-size:30px;}
   .scene .arw{color:#9ca3af;font-size:24px;}
-  .beziersvg{display:inline-block;width:58px;height:54px;vertical-align:middle;}
+  /* vector draw lesson */
+  .vdstage{display:flex;align-items:center;justify-content:center;}
+  .vdraw{width:150px;height:140px;}
+  .vd-fill{fill:#ec4899;opacity:0;}
+  .vd-line{fill:none;stroke:#be185d;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:100;stroke-dashoffset:100;}
+  .vd-h{opacity:0;}
+  .vd-h line{stroke:#6366f1;stroke-width:.5;stroke-dasharray:1.4 1.2;}
+  .vd-h circle{fill:#6366f1;}
+  .vd-h rect{fill:#fff;stroke:#6366f1;stroke-width:.7;}
+  .vdraw.go .vd-line{animation:vddraw 1.9s ease forwards;}
+  .vdraw.go .vd-fill{animation:vdfill 1.9s ease forwards;}
+  .vdraw.go .vd-h{animation:vdhand 1.9s ease forwards;}
+  @keyframes vddraw{0%{stroke-dashoffset:100;}70%{stroke-dashoffset:0;}100%{stroke-dashoffset:0;}}
+  @keyframes vdfill{0%,70%{opacity:0;}90%{opacity:1;}100%{opacity:1;}}
+  @keyframes vdhand{0%{opacity:0;}10%{opacity:1;}72%{opacity:1;}90%{opacity:0;}100%{opacity:0;}}
   .introBtns{display:flex;gap:12px;margin-top:6px;}
   .big{font-size:17px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
     border:none;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
@@ -268,23 +283,11 @@ function pxGridBlank(){
 const HEART_SVG=`<svg viewBox="0 0 32 29" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
   <path d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z" fill="#ec4899"/></svg>`;
 
-/* animated heart drawn with bezier curves (used on the vector intro slide) */
-const BEZIER_HEART=`<span class="beziersvg"><svg viewBox="-3 -4 38 35" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-  <style>
-    .bz-fill{fill:#ec4899;opacity:0;animation:bzfill 4s ease-in-out infinite;}
-    .bz-line{fill:none;stroke:#be185d;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
-      stroke-dasharray:100;stroke-dashoffset:100;animation:bzdraw 4s ease-in-out infinite;}
-    .bz-h{opacity:0;animation:bzhand 4s ease-in-out infinite;}
-    .bz-h line{stroke:#6366f1;stroke-width:.5;stroke-dasharray:1.4 1.2;}
-    .bz-h circle{fill:#6366f1;}
-    .bz-h rect{fill:#fff;stroke:#6366f1;stroke-width:.7;}
-    @keyframes bzdraw{0%{stroke-dashoffset:100;opacity:1;}40%{stroke-dashoffset:0;opacity:1;}88%{opacity:1;}100%{stroke-dashoffset:0;opacity:0;}}
-    @keyframes bzfill{0%,40%{opacity:0;}52%{opacity:1;}88%{opacity:1;}100%{opacity:0;}}
-    @keyframes bzhand{0%,6%{opacity:0;}16%{opacity:1;}44%{opacity:1;}54%{opacity:0;}100%{opacity:0;}}
-  </style>
-  <path class="bz-fill" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
-  <path class="bz-line" pathLength="100" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
-  <g class="bz-h">
+/* vector heart drawn with bezier curves — animation triggered by adding .go */
+const VDRAW_SVG=`<svg viewBox="-3 -4 38 35" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <path class="vd-fill" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
+  <path class="vd-line" pathLength="100" d="M16 28 C16 28 1 18.5 1 8.5 C1 4 4.5 1 8 1 C11.5 1 16 5 16 5 C16 5 20.5 1 24 1 C27.5 1 31 4 31 8.5 C31 18.5 16 28 16 28 Z"/>
+  <g class="vd-h">
     <line x1="8" y1="1" x2="3.5" y2="1"/><line x1="8" y1="1" x2="12.5" y2="1"/>
     <line x1="24" y1="1" x2="19.5" y2="1"/><line x1="24" y1="1" x2="28.5" y2="1"/>
     <circle cx="3.5" cy="1" r=".9"/><circle cx="12.5" cy="1" r=".9"/>
@@ -294,7 +297,7 @@ const BEZIER_HEART=`<span class="beziersvg"><svg viewBox="-3 -4 38 35" width="10
     <rect x="15.1" y="4.1" width="1.8" height="1.8" rx=".3"/>
     <rect x="15.1" y="27.1" width="1.8" height="1.8" rx=".3"/>
   </g>
-</svg></span>`;
+</svg>`;
 
 /* ---------- L1: bitmap = pixels (zoom to reveal) ---------- */
 function renderPixels(done){
@@ -397,7 +400,25 @@ function renderVectorFormats(done){
   renderFormats(done,["svg","eps","ai"],["jpg","png"],{ko:"그건 비트맵(사진) 파일이에요. 벡터를 골라 주세요!",en:"That's a bitmap (photo) file. Pick the vector ones!"});
 }
 
-/* ---------- L4: vector stays sharp when enlarged ---------- */
+/* ---------- L4: vector = drawing instructions (watch it draw) ---------- */
+function renderVectorDraw(done){
+  stage.innerHTML=`<div class="panel">
+    <div class="stageLabel">${T({ko:"이건 <b>벡터</b> 그림 — 점이 아니라 <b>선·곡선</b>으로 그려요",en:"This is a <b>vector</b> — drawn with <b>lines & curves</b>, not dots"})}</div>
+    <div class="vdstage"><div class="vdraw">${VDRAW_SVG}</div></div>
+    <button class="zoomBtn">✒️ ${T({ko:"그리는 모습 보기",en:"Watch it draw"})}</button>
+  </div>`;
+  const panel=stage.querySelector(".panel"), vd=stage.querySelector(".vdraw"), btn=stage.querySelector(".zoomBtn");
+  btn.addEventListener("click",()=>{
+    clearFocus(); clickSnd(); btn.disabled=true; btn.style.opacity=".5";
+    vd.classList.add("go");
+    const lab=panel.querySelector(".stageLabel");
+    lab.innerHTML=T({ko:"선을 따라 그려서 <b>하트</b>가 완성됐어요! 이게 벡터예요 ✒️",en:"It traces the lines to complete a <b>heart</b>! That's a vector ✒️"});
+    setTimeout(()=>{ chime(); once(done,"✒️",{ko:"벡터는 ‘어디서 어디로 곡선’ 같은 그리는 방법이에요 🎉",en:"A vector is drawing instructions like ‘curve from here to here’ 🎉"}); },2000);
+  });
+  focusSel(".zoomBtn");
+}
+
+/* ---------- L5: vector stays sharp when enlarged ---------- */
 function renderVectorScale(done){
   stage.innerHTML=`<div class="panel">
     <div class="stageLabel">${T({ko:"이번엔 <b>벡터</b> 그림! 손잡이를 끌어 크게 해보세요",en:"Now a <b>vector</b>! Drag the slider to enlarge it"})}</div>
@@ -435,11 +456,15 @@ const LESSONS=[
     instr:{ko:"비트맵을 아주 <b>크게</b> 늘려 보세요 (손잡이를 끝까지). 어떻게 되나요?",en:"Stretch the bitmap really <b>big</b> (slide to the end). What happens?"},
     hint:{ko:"점의 개수는 정해져 있어요. 크게 하면 점이 커져서 흐릿·울퉁불퉁해져요.",en:"There's a fixed number of dots. Enlarging makes each dot big, so it looks blurry."},
     render:renderBitmapScale },
-  { title:{ko:"④ 벡터는 안 흐려져요",en:"④ Vector never blurs"},
+  { title:{ko:"④ 벡터 = 그리는 방법",en:"④ Vector = drawing instructions"},
+    instr:{ko:"이제 다른 종류 — <b>벡터</b>예요. 버튼을 눌러 <b>선·곡선</b>으로 하트가 그려지는 걸 보세요.",en:"Now the other kind — a <b>vector</b>. Tap the button to watch a heart drawn with <b>lines & curves</b>."},
+    hint:{ko:"벡터는 점이 아니라 ‘어디서 어디로 곡선’ 같은 그리는 방법이에요. 로고·아이콘이 벡터예요.",en:"A vector isn't dots — it's instructions like ‘curve from here to here’. Logos and icons are vectors."},
+    render:renderVectorDraw },
+  { title:{ko:"⑤ 벡터는 안 흐려져요",en:"⑤ Vector never blurs"},
     instr:{ko:"이번엔 <b>벡터</b> 그림을 똑같이 아주 크게 늘려 보세요. 흐려질까요?",en:"Now stretch a <b>vector</b> picture just as big. Will it blur?"},
     hint:{ko:"벡터는 ‘여기서 여기로 곡선’ 같은 그리는 방법이라, 크기마다 새로 또렷하게 그려요.",en:"A vector is instructions like ‘curve from here to here’, so it's redrawn sharp at every size."},
     render:renderVectorScale },
-  { title:{ko:"⑤ 벡터 파일 형식",en:"⑤ Vector file types"},
+  { title:{ko:"⑥ 벡터 파일 형식",en:"⑥ Vector file types"},
     instr:{ko:"벡터 파일을 모두 골라 보세요: <b>.svg · .eps · .ai</b>",en:"Tap all the vector files: <b>.svg · .eps · .ai</b>"},
     hint:{ko:"벡터는 열고 고치려면 특별한 프로그램(일러스트레이터·잉크스케이프 등)이 필요해요.",en:"To open & edit vectors you need special software (Illustrator, Inkscape, etc.)."},
     render:renderVectorFormats },
@@ -450,11 +475,6 @@ const INTRO=[
   { art:"🖼️", title:{ko:"그림에는 두 종류가 있어요",en:"Two kinds of pictures"},
     html:{ko:`컴퓨터 그림은 크게 <b>두 가지</b>가 있어요. 하나는 <b>비트맵</b>, 다른 하나는 <b>벡터</b>예요.<br><br>둘은 만들어진 방법이 아주 달라요 — 그래서 크게 했을 때 결과도 달라요!`,
     en:`Computer pictures come in <b>two kinds</b>: <b>bitmap</b> and <b>vector</b>.<br><br>They're built very differently — so they behave differently when you make them bigger!`} },
-  { art:"✒️", title:{ko:"벡터 = 그리는 방법",en:"Vector = drawing instructions"},
-    html:{ko:`<div class="scene"><span>✒️</span><span class="arw">→</span>${BEZIER_HEART}</div>
-    <b>벡터</b>는 점이 아니라 <b>그리는 방법</b>(선·곡선·색)이에요. 로고·아이콘이 여기 속해요.<br><br>크기마다 새로 그려서 아무리 키워도 <b>또렷</b>해요 — 대신 특별한 프로그램이 필요해요.`,
-    en:`<div class="scene"><span>✒️</span><span class="arw">→</span>${BEZIER_HEART}</div>
-    A <b>vector</b> isn't dots — it's <b>drawing instructions</b> (lines, curves, colors). Logos and icons are vectors.<br><br>It's redrawn at every size, so it stays <b>sharp</b> — but it needs special software.`} },
 ];
 
 /* ---------- engine ---------- */
