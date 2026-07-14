@@ -66,6 +66,50 @@
   .tapBig.gone{transform:scale(.4);opacity:0;}
   .wafer{font-size:104px;animation:pop .5s ease;}
 
+  /* ===== chip-making diagram (level 1) ===== */
+  .chipObj{cursor:pointer;user-select:none;display:flex;align-items:flex-end;justify-content:center;
+    min-height:132px;transition:transform .2s;}
+  .chipObj:active{transform:scale(.96);}
+  .tray{width:min(300px,80%);height:22px;border-radius:7px;margin-top:-6px;
+    background:linear-gradient(#f0e3c2,#d8c398);border:2px solid #bb9e6c;
+    box-shadow:0 7px 15px rgba(0,0,0,.16);transform:perspective(240px) rotateX(42deg);}
+  .siRock{width:118px;height:92px;animation:pop .45s ease;
+    background:radial-gradient(circle at 38% 32%,#c2c6cd,#858b95 65%,#5b6069);
+    border-radius:48% 52% 56% 44%/58% 52% 48% 42%;
+    box-shadow:inset -9px -11px 20px rgba(0,0,0,.32),inset 7px 6px 14px rgba(255,255,255,.35),0 6px 13px rgba(0,0,0,.2);}
+  .ingot{position:relative;width:196px;height:84px;animation:pop .45s ease;}
+  .ingot .body{position:absolute;left:40px;right:2px;top:6px;bottom:6px;border-radius:0 44px 44px 0;
+    background:linear-gradient(#aab0ba,#6c717b 52%,#454951);box-shadow:inset 0 -6px 12px rgba(0,0,0,.3);}
+  .ingot .cap{position:absolute;left:8px;top:0;width:66px;height:84px;border-radius:50%;
+    background:radial-gradient(circle at 46% 40%,#cfd4dc,#7a808a 68%,#4a4e56);
+    box-shadow:inset -8px 0 14px rgba(0,0,0,.34),inset 6px 4px 10px rgba(255,255,255,.4);}
+  .wpair,.cutRow{display:flex;align-items:center;justify-content:center;gap:14px;animation:pop .45s ease;}
+  .wdisc{width:98px;height:98px;border-radius:50%;position:relative;overflow:hidden;
+    background:radial-gradient(circle at 40% 34%,#d3dbec,#9fabc9 68%,#7f8dae);
+    box-shadow:inset -6px -8px 16px rgba(0,0,0,.2),inset 5px 5px 12px rgba(255,255,255,.5),0 5px 11px rgba(0,0,0,.16);}
+  .wdisc.lines::before{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(95deg,rgba(255,255,255,.4) 0 2px,transparent 2px 10px);}
+  .wdisc.circuits::after{content:"";position:absolute;inset:9px;border-radius:50%;
+    background:repeating-linear-gradient(0deg,#e0ab3f 0 2px,transparent 2px 13px),
+      repeating-linear-gradient(90deg,#e0ab3f 0 2px,transparent 2px 13px);
+    -webkit-mask:radial-gradient(circle,#000 99%,transparent);mask:radial-gradient(circle,#000 99%,transparent);}
+  .wdisc.cut{box-shadow:inset -6px -8px 16px rgba(0,0,0,.2),inset 5px 5px 12px rgba(255,255,255,.5),0 5px 11px rgba(0,0,0,.16);}
+  .wdisc.cut .grid{position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg,rgba(30,30,40,.55) 0 1px,transparent 1px 18px),
+      repeating-linear-gradient(90deg,rgba(30,30,40,.55) 0 1px,transparent 1px 18px);}
+  .cutArrow{font-size:30px;color:#64748b;}
+  .chip3d{position:relative;width:88px;height:88px;border-radius:11px;
+    background:linear-gradient(135deg,#2c2f35,#141519);
+    box-shadow:0 8px 18px rgba(0,0,0,.5),inset 0 0 0 3px #4a4d54;
+    display:flex;align-items:center;justify-content:center;animation:pop .45s ease;}
+  .chip3d::before{content:"";width:46px;height:46px;border-radius:5px;
+    background:repeating-linear-gradient(0deg,#e6b74a 0 2px,transparent 2px 7px),
+      repeating-linear-gradient(90deg,#e6b74a 0 2px,transparent 2px 7px);}
+  .chip3d .pins{position:absolute;inset:-7px;border-radius:14px;
+    background:repeating-linear-gradient(90deg,transparent 0 5px,#c99a2e 5px 8px,transparent 8px 13px);opacity:.9;
+    -webkit-mask:linear-gradient(#000,#000) top/100% 7px no-repeat,linear-gradient(#000,#000) bottom/100% 7px no-repeat;
+    mask:linear-gradient(#000,#000) top/100% 7px no-repeat,linear-gradient(#000,#000) bottom/100% 7px no-repeat;}
+
   .bulb{font-size:96px;filter:grayscale(1) brightness(.72);transition:filter .25s,transform .2s;}
   .bulb.on{filter:none;transform:scale(1.06);}
   .toggle{width:82px;height:44px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;transition:background .2s;}
@@ -244,22 +288,47 @@ const decimal=bits=>bits.reduce((a,b)=>a*2+b,0);
 
 /* ---------- lessons ---------- */
 const levels=[
-  { title:{ko:"실리콘 · 돌에서 시작해요",en:"Silicon · it starts as rock"},
-    instr:{ko:"컴퓨터의 몸은 '실리콘'이라는 돌로 만들어요. 모래(돌)를 아주 순수하게 녹여 얇은 판으로 잘라요.",en:"A computer's body is made from a rock called silicon. We melt sand (rock) into a pure crystal and slice it into thin wafers."},
-    hint:{ko:"모래·돌을 톡 눌러 반짝이는 판으로 바꿔 보세요.",en:"Tap the sand/rock to turn it into a shiny wafer."},
+  { title:{ko:"실리콘 · 컴퓨터 칩 만들기",en:"Silicon · make a computer chip"},
+    instr:{ko:"컴퓨터의 첫 재료는 '칩'이에요. 돌(실리콘)에서 칩까지 — 톡톡 눌러 직접 만들어 봐요!",en:"A computer's first ingredient is a 'chip'. From rock (silicon) to chip — tap step by step to make one!"},
+    hint:{ko:"반짝이는 것을 톡 눌러 다음 단계로 넘어가요.",en:"Tap the glowing object to move to the next step."},
     build(st,done){
-      st.innerHTML=`<div class="stageCol">
-        <div class="tapBig" id="rock">🪨</div>
-        <div class="capt" id="rcap">${T({ko:"모래 · 돌",en:"Sand · rock"})}</div>
-        <div class="subcapt">${T({ko:"이 흔한 돌이 컴퓨터의 재료예요.",en:"This ordinary rock is what computers are made from."})}</div>
-      </div>`;
-      const rock=st.querySelector("#rock"); requestAnimationFrame(()=>focusEl(rock));
-      rock.addEventListener("click",()=>{
-        if(locked)return; clearFocus(); rock.classList.add("gone"); beep(720,.12);
-        setTimeout(()=>{ rock.textContent="💿"; rock.className="wafer"; rock.style.transform="";
-          st.querySelector("#rcap").textContent=T({ko:"실리콘 웨이퍼",en:"Silicon wafer"});
-          done("💿",{ko:"돌이 반짝이는 판(웨이퍼)이 됐어요!",en:"The rock became a shiny wafer!"}); },360);
-      });
+      let step=0;
+      const STEPS=[
+        { obj:`<div class="siRock"></div>`,
+          cap:{ko:"실리콘 얻기",en:"Obtain silicon"},
+          sub:{ko:"흔한 돌(모래)이 재료예요. 톡 눌러 순수한 실리콘 기둥으로 만들어요.",en:"An ordinary rock (sand) is the raw material. Tap to purify it into a silicon cylinder."} },
+        { obj:`<div class="ingot"><div class="cap"></div><div class="body"></div></div>`,
+          cap:{ko:"웨이퍼로 자르기",en:"Slice the wafer"},
+          sub:{ko:"기둥을 아주 얇게 잘라 동그란 판(웨이퍼)을 만들어요. 톡 눌러 잘라요.",en:"Slice the cylinder into thin round wafers. Tap to slice."} },
+        { obj:`<div class="wpair"><div class="wdisc lines"></div><div class="wdisc lines"></div></div>`,
+          cap:{ko:"회로 새기기",en:"Fabricate the circuits"},
+          sub:{ko:"웨이퍼에 아주 작은 회로(전기가 다니는 길)를 새겨요. 톡 눌러 회로를 만들어요.",en:"Etch tiny circuits (paths for electricity) onto the wafers. Tap to fabricate."} },
+        { obj:`<div class="wpair"><div class="wdisc lines circuits"></div><div class="wdisc lines circuits"></div></div>`,
+          cap:{ko:"칩으로 자르기",en:"Cut into chips"},
+          sub:{ko:"웨이퍼를 작은 네모로 잘라 '칩'을 만들어요. 톡 눌러 칩을 완성해요!",en:"Cut the wafer into little squares — the chips! Tap to finish."} },
+        { obj:`<div class="cutRow"><div class="wdisc lines circuits cut"><div class="grid"></div></div><div class="cutArrow">➡️</div><div class="chip3d"><div class="pins"></div></div></div>`,
+          cap:{ko:"컴퓨터 칩 완성!",en:"A computer chip!"},
+          sub:{ko:"돌에서 칩까지 직접 만들었어요. 이게 컴퓨터의 첫 재료예요 🎉",en:"You made a chip from a rock — a computer's very first ingredient 🎉"} }
+      ];
+      function draw(){
+        const s=STEPS[step];
+        st.innerHTML=`<div class="stageCol">
+          <div class="chipObj" id="chipObj">${s.obj}</div>
+          <div class="tray"></div>
+          <div class="capt">${step<4?(step+1)+". ":""}${T(s.cap)}</div>
+          <div class="subcapt">${T(s.sub)}</div>
+        </div>`;
+        const obj=st.querySelector("#chipObj");
+        if(step<4){
+          requestAnimationFrame(()=>focusEl(obj));
+          obj.addEventListener("click",()=>{
+            if(locked)return; beep(660+step*45,.1); clearFocus(); step++;
+            if(step>=4){ draw(); done("🔲",{ko:"칩 완성! 컴퓨터의 첫 재료를 만들었어요!",en:"Chip made! You created a computer's first ingredient!"}); }
+            else draw();
+          });
+        }
+      }
+      draw();
     } },
 
   { title:{ko:"전기 · 켜짐과 꺼짐",en:"Electricity · on and off"},
