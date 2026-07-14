@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>겹치기와 편집 단계 · Layers</title>
+<style>
+  :root{--accent:#6366f1;--accent2:#ec4899;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--soft:#6b7280;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:linear-gradient(160deg,#eef2ff,#fdf2f8);color:#1f2937;-webkit-font-smoothing:antialiased;}
+  #app{max-width:760px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:12px 14px 24px;}
+  header{position:relative;text-align:center;}
+  #langToggle{position:absolute;top:0;right:0;display:flex;gap:4px;}
+  #langToggle button{font-size:14px;font-weight:700;border:1px solid #c7d2fe;background:#fff;color:#6366f1;border-radius:999px;padding:5px 11px;cursor:pointer;}
+  #langToggle button.on{background:#6366f1;color:#fff;}
+  #homeBtn{position:absolute;top:0;left:0;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:6px 12px;}
+  h1{font-size:23px;margin:6px 0 2px;}
+  .sub{font-size:15px;color:var(--soft);margin:0 0 8px;}
+  #progressWrap{height:9px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px auto 4px;max-width:520px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
+  #stepText{font-size:13px;color:var(--soft);margin-bottom:8px;}
+  #card{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;}
+  .ghostBtn{position:absolute;top:-2px;right:0;font-size:13px;color:#9ca3af;background:none;border:none;cursor:pointer;z-index:5;}
+
+  /* intro */
+  #introView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;
+    background:#fff;border-radius:18px;padding:26px 22px;box-shadow:0 12px 30px rgba(99,102,241,.14);}
+  #introArt{font-size:74px;}
+  #introTitle{font-size:24px;font-weight:800;}
+  #introText{font-size:17px;line-height:1.7;max-width:560px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .scene{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:6px 0 10px;font-size:34px;}
+  .scene .arw{color:#9ca3af;font-size:26px;}
+  .introBtns{display:flex;gap:12px;margin-top:6px;}
+  .big{font-size:17px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
+  .big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);box-shadow:none;}
+
+  /* main */
+  #mainView{flex:1;display:flex;flex-direction:column;min-height:0;}
+  #banner{background:#fff;border-radius:14px;padding:11px 15px;box-shadow:0 8px 20px rgba(99,102,241,.10);margin-bottom:10px;}
+  #banner .t{font-size:18px;font-weight:800;color:var(--accent);}
+  #banner .i{font-size:16px;margin-top:3px;line-height:1.5;}
+  #banner .i b{color:var(--accent2);}
+  #banner .h{font-size:14px;color:var(--soft);margin-top:4px;}
+  #stage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:12px;}
+
+  /* canvas + objects */
+  #canvas{position:relative;width:100%;max-width:640px;height:420px;background:#f8fafc;
+    background-image:linear-gradient(#eef1f6 1px,transparent 1px),linear-gradient(90deg,#eef1f6 1px,transparent 1px);
+    background-size:32px 32px;border:2px solid #e2e8f0;border-radius:16px;overflow:hidden;
+    box-shadow:0 12px 30px rgba(99,102,241,.12);touch-action:none;}
+  .obj{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:10px;
+    transform-origin:50% 50%;cursor:move;touch-action:none;user-select:none;box-shadow:0 4px 12px rgba(0,0,0,.14);}
+  .obj .objtext{font-size:20px;font-weight:800;pointer-events:none;padding:2px 6px;border-radius:6px;text-align:center;}
+  .obj.sel .frame{position:absolute;inset:-2px;border:2px solid var(--accent);border-radius:11px;pointer-events:none;}
+  .obj.texting .objtext{outline:2px dashed #fff;outline-offset:3px;background:rgba(255,255,255,.18);}
+  .h{position:absolute;width:16px;height:16px;background:#fff;border:2px solid var(--accent);border-radius:3px;z-index:3;}
+  .h.tl{left:-9px;top:-9px;cursor:nwse-resize;} .h.tr{right:-9px;top:-9px;cursor:nesw-resize;}
+  .h.bl{left:-9px;bottom:-9px;cursor:nesw-resize;} .h.br{right:-9px;bottom:-9px;cursor:nwse-resize;}
+  .h.lm{left:-9px;top:50%;margin-top:-8px;cursor:ew-resize;} .h.rm{right:-9px;top:50%;margin-top:-8px;cursor:ew-resize;}
+  .h.tm{top:-9px;left:50%;margin-left:-8px;cursor:ns-resize;} .h.bm{bottom:-9px;left:50%;margin-left:-8px;cursor:ns-resize;}
+  .h.corner{background:#eef2ff;} .h.side{border-radius:50%;background:#fef2f8;border-color:var(--accent2);}
+  .rotline{position:absolute;left:50%;top:-30px;width:2px;height:24px;background:var(--accent);margin-left:-1px;z-index:2;}
+  .h.rot{width:24px;height:24px;border-radius:50%;left:50%;top:-46px;margin-left:-12px;background:var(--accent);
+    border-color:#fff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:grab;}
+  .target{position:absolute;border:3px dashed var(--accent2);border-radius:12px;background:rgba(236,72,153,.06);
+    display:flex;align-items:center;justify-content:center;color:var(--accent2);font-weight:800;font-size:14px;z-index:0;}
+
+  /* toolbar */
+  #toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .tbtn{font-size:15px;font-weight:700;color:#374151;background:#fff;border:1px solid #d1d5db;border-radius:10px;
+    padding:9px 13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+  .tbtn:active{transform:translateY(1px);}
+
+  .tip{font-size:15px;color:#374151;background:#eef2ff;border-radius:12px;padding:9px 14px;max-width:600px;text-align:center;}
+  .tip.good{background:#ecfdf5;color:#065f46;}
+
+  #successOverlay{position:absolute;left:8px;right:8px;bottom:8px;background:#f2fdf6;border:2px solid var(--good);
+    box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:20;padding:12px 14px;}
+  #successOverlay .be{font-size:38px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:96px;animation:pop .6s ease;}
+  #hubLink{display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🗂️</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()" style="margin-top:14px;"></button>
+      <div><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"겹치기와 편집 단계",en:"Layers & Editing Levels"},
+  h1:{ko:"🗂️ 겹치기와 편집 단계 <span style='font-size:14px;color:#6b7280;'>(스코프·쌓기)</span>",en:"🗂️ Layers & Editing Levels"},
+  sub:{ko:"한 번 클릭 · 두 번 클릭 · 쌓기 순서",en:"One click · Double-click · Stacking order"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  prev:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  start:{ko:"시작하기 ▶",en:"Start ▶"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  home:{ko:"🏠 교실",en:"🏠 Classroom"},
+  finalTitle:{ko:"레이어 마스터!",en:"Layers master!"},
+  finalMsg:{ko:"이제 엄마는 알아요 —<br><b>한 번 클릭</b>은 도형 전체, <b>두 번 클릭</b>은 그 안의 글자!<br>그리고 물체를 <b>맨 앞·맨 뒤</b>로 보내 쌓기 순서를 바꿀 수 있어요.<br>캔바·포토피아·포토샵에서 <b>똑같이</b> 통해요 💖",en:"Now you know —<br><b>one click</b> selects the whole shape, <b>double-click</b> edits the text inside!<br>And you can send objects to the <b>front or back</b> to change the stacking order.<br>It works <b>the same</b> in Canva, Photopea, and Photoshop 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").innerHTML=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  els.skip.textContent=T(UI.skip); els.introBack.textContent=T(UI.prev);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.querySelector("#homeBtn .ko").textContent=T(UI.home);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else if(!doneGuard) loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.12){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊"];for(let i=0;i<24;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- transform canvas engine ---------- */
+function makeCanvas(stage, defs, opts){
+  opts=opts||{};
+  stage.innerHTML=`<div id="canvas"></div>`+(opts.tip?`<div class="tip" id="tipBox">${T(opts.tip)}</div>`:``)+(opts.toolbar?toolbarHTML():``);
+  const canvas=stage.querySelector("#canvas");
+  const shapes=defs.map((d,i)=>({id:d.id||("s"+i),x:d.x,y:d.y,w:d.w,h:d.h,rot:d.rot||0,fill:d.fill,text:d.text||"",tc:d.tc||"#fff"}));
+  let sel=opts.select||null, scope="shape";
+  const ctrl={onEvent:function(){}, shapes, get sel(){return sel;}, select:doSelect, order:()=>shapes.map(s=>s.id)};
+  function shape(id){ return shapes.find(s=>s.id===id); }
+  function copy(s){ return {id:s.id,x:s.x,y:s.y,w:s.w,h:s.h,rot:s.rot}; }
+  function emit(ev,data){ try{ ctrl.onEvent(ev,data); }catch(e){} }
+  function tip(txt,good){ const t=stage.querySelector("#tipBox"); if(t){ t.innerHTML=T(txt); t.classList.toggle("good",!!good);} }
+  ctrl.tip=tip;
+
+  if(opts.target){ const t=document.createElement("div"); t.className="target"; t.style.left=opts.target.x+"px";
+    t.style.top=opts.target.y+"px"; t.style.width=opts.target.w+"px"; t.style.height=opts.target.h+"px";
+    t.textContent=T(opts.target.label||{ko:"여기로",en:"here"}); canvas.appendChild(t); }
+
+  function handlesHTML(){
+    return `<div class="frame"></div>
+      <div class="h corner tl" data-k="tl"></div><div class="h corner tr" data-k="tr"></div>
+      <div class="h corner bl" data-k="bl"></div><div class="h corner br" data-k="br"></div>
+      <div class="h side lm" data-k="lm"></div><div class="h side rm" data-k="rm"></div>
+      <div class="h side tm" data-k="tm"></div><div class="h side bm" data-k="bm"></div>
+      <div class="rotline"></div><div class="h rot" data-k="rot">↻</div>`;
+  }
+  function render(){
+    canvas.querySelectorAll(".obj").forEach(n=>n.remove());
+    shapes.forEach((s,i)=>{
+      const o=document.createElement("div");
+      o.className="obj"+(sel===s.id?" sel":"")+(scope==="text"&&sel===s.id?" texting":"");
+      o.style.left=s.x+"px"; o.style.top=s.y+"px"; o.style.width=s.w+"px"; o.style.height=s.h+"px";
+      o.style.transform="rotate("+s.rot+"deg)"; o.style.background=s.fill; o.style.zIndex=i+1;
+      o.dataset.id=s.id;
+      o.innerHTML=`<span class="objtext" style="color:${s.tc}">${s.text}</span>`+(sel===s.id?handlesHTML():"");
+      canvas.appendChild(o);
+    });
+  }
+  function doSelect(id){ if(sel!==id){ sel=id; scope="shape"; render(); if(id) emit("select",copy(shape(id))); } }
+  function deselect(){ if(sel){ sel=null; scope="shape"; render(); emit("deselect",{}); } }
+
+  let lastTap={id:null,t:0};
+  canvas.addEventListener("pointerdown",e=>{
+    const h=e.target.closest(".h"); const objEl=e.target.closest(".obj");
+    if(h && objEl){ e.preventDefault(); startDrag(e,objEl.dataset.id,h.dataset.k); return; }
+    if(objEl){
+      e.preventDefault();
+      const id=objEl.dataset.id, now=Date.now();
+      if(lastTap.id===id && (now-lastTap.t)<350){
+        lastTap={id:null,t:0};
+        sel=id; scope="text"; render(); emit("scope",{level:"text",shape:copy(shape(id))});
+        return;
+      }
+      lastTap={id,t:now};
+      doSelect(id); startDrag(e,id,"move"); return;
+    }
+    deselect(); lastTap={id:null,t:0};
+  });
+
+  function startDrag(e,id,kind){
+    const s=shape(id); if(!s) return; clickSnd();
+    const r=canvas.getBoundingClientRect();
+    const cx=s.x+s.w/2, cy=s.y+s.h/2;
+    const p0={x:e.clientX-r.left,y:e.clientY-r.top};
+    const st={x:s.x,y:s.y,w:s.w,h:s.h,rot:s.rot};
+    const d0=Math.hypot(p0.x-cx,p0.y-cy)||1;
+    const a0=Math.atan2(p0.y-cy,p0.x-cx);
+    const rad=st.rot*Math.PI/180;
+    function move(ev){
+      const p={x:ev.clientX-r.left,y:ev.clientY-r.top};
+      if(kind==="move"){ s.x=st.x+(p.x-p0.x); s.y=st.y+(p.y-p0.y); render(); emit("move",Object.assign(copy(s),{cx:s.x+s.w/2,cy:s.y+s.h/2})); }
+      else if(kind==="tl"||kind==="tr"||kind==="bl"||kind==="br"){
+        const sc=Math.max(0.15,Math.hypot(p.x-cx,p.y-cy)/d0);
+        s.w=Math.max(28,st.w*sc); s.h=Math.max(28,st.h*sc); s.x=cx-s.w/2; s.y=cy-s.h/2; render();
+        emit("scale",Object.assign(copy(s),{ratio:s.w/st.w}));
+      } else if(kind==="lm"||kind==="rm"){
+        const ux=Math.cos(rad),uy=Math.sin(rad); const proj=(p.x-cx)*ux+(p.y-cy)*uy;
+        s.w=Math.max(28,2*Math.abs(proj)); s.x=cx-s.w/2; s.y=cy-s.h/2; render();
+        emit("stretch",Object.assign(copy(s),{axis:"w",dw:s.w-st.w}));
+      } else if(kind==="tm"||kind==="bm"){
+        const ux=-Math.sin(rad),uy=Math.cos(rad); const proj=(p.x-cx)*ux+(p.y-cy)*uy;
+        s.h=Math.max(28,2*Math.abs(proj)); s.x=cx-s.w/2; s.y=cy-s.h/2; render();
+        emit("stretch",Object.assign(copy(s),{axis:"h",dh:s.h-st.h}));
+      } else if(kind==="rot"){
+        const a=Math.atan2(p.y-cy,p.x-cx); s.rot=st.rot+(a-a0)*180/Math.PI; render();
+        emit("rotate",Object.assign(copy(s),{drot:Math.abs(s.rot-st.rot)}));
+      }
+    }
+    function up(){ document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); emit("end",copy(s)); }
+    document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
+  }
+
+  /* stacking */
+  ctrl.reorder=function(action){
+    if(!sel){ tip({ko:"먼저 도형을 눌러 선택하세요.",en:"First tap a shape to select it."}); beep(240,.1); return; }
+    const i=shapes.findIndex(s=>s.id===sel); if(i<0) return; const s=shapes[i]; clickSnd();
+    shapes.splice(i,1);
+    if(action==="front") shapes.push(s);
+    else if(action==="back") shapes.unshift(s);
+    else if(action==="forward") shapes.splice(Math.min(shapes.length,i+1),0,s);
+    else if(action==="backward") shapes.splice(Math.max(0,i-1),0,s);
+    render(); emit("reorder",{id:sel,action,order:shapes.map(x=>x.id)});
+  };
+
+  render();
+  return ctrl;
+}
+function toolbarHTML(){
+  return `<div id="toolbar">
+    <button class="tbtn" onclick="CANVAS&&CANVAS.reorder('back')">⤓ ${T({ko:"맨 뒤로",en:"To back"})}</button>
+    <button class="tbtn" onclick="CANVAS&&CANVAS.reorder('backward')">↓ ${T({ko:"뒤로",en:"Backward"})}</button>
+    <button class="tbtn" onclick="CANVAS&&CANVAS.reorder('forward')">↑ ${T({ko:"앞으로",en:"Forward"})}</button>
+    <button class="tbtn" onclick="CANVAS&&CANVAS.reorder('front')">⤒ ${T({ko:"맨 앞으로",en:"To front"})}</button>
+  </div>`;
+}
+let CANVAS=null;
+
+/* ---------- intro ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"📄", title:{ko:"물체는 종이처럼 쌓여요",en:"Objects stack like paper"},
+    html:{ko:`디자인 화면에서는 네모·글자·사진이 <b>여러 장의 종이처럼 겹겹이 쌓여</b> 있어요.<br><br>
+    <b>위에 있는 것</b>이 아래에 있는 것을 <b>가려요</b>. 이 순서를 <b>‘쌓기 순서(레이어)’</b>라고 해요.<br><br>
+    순서를 바꾸면 무엇이 앞에 보일지 정할 수 있어요. 😊`,
+    en:`On a design canvas, boxes, text, and photos are <b>stacked like sheets of paper</b>.<br><br>
+    Whatever is <b>on top</b> <b>covers</b> what's below. This order is called the <b>stacking order (layers)</b>.<br><br>
+    Change the order to decide what shows in front. 😊`} },
+  { art:"👆", title:{ko:"한 번 클릭 vs 두 번 클릭",en:"One click vs. double-click"},
+    html:{ko:`<div class="scene"><span>👆</span><span class="arw">→</span><span>🟦</span><span class="arw">···</span><span>👆👆</span><span class="arw">→</span><span>🔤</span></div>
+    <b>한 번 클릭</b>하면 <b>도형 전체</b>가 선택돼요.<br>
+    <b>두 번 클릭(더블클릭)</b>하면 <b>더 깊이</b> 들어가 그 안의 <b>글자</b>를 고칠 수 있어요.<br><br>
+    이렇게 단계를 오르내리는 걸 <b>‘편집 단계(스코프)’</b>라고 해요. <b>빈 곳</b>을 누르면 다시 밖으로 나와요.`,
+    en:`<div class="scene"><span>👆</span><span class="arw">→</span><span>🟦</span><span class="arw">···</span><span>👆👆</span><span class="arw">→</span><span>🔤</span></div>
+    <b>One click</b> selects the <b>whole shape</b>.<br>
+    <b>Double-click</b> goes <b>deeper</b> so you can edit the <b>text inside</b>.<br><br>
+    Moving between these levels is the <b>editing scope</b>. Click an <b>empty spot</b> to come back out.`} },
+  { art:"🗂️", title:{ko:"쌓기 순서 바꾸기",en:"Change the stacking order"},
+    html:{ko:`아래 단추로 물체를 <b>맨 앞으로</b> 올리거나 <b>맨 뒤로</b> 내릴 수 있어요.<br><br>
+    가려진 물체를 <b>앞으로</b> 꺼내거나, 방해되는 물체를 <b>뒤로</b> 보낼 때 써요.<br><br>
+    이제 하나씩 해봐요! 😊`,
+    en:`Use the buttons below to send an object <b>to the front</b> or <b>to the back</b>.<br><br>
+    Bring a hidden object <b>forward</b>, or push a blocking object <b>back</b>.<br><br>
+    Let's try each one! 😊`} },
+];
+
+/* ---------- lessons ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+function once(done,emoji,msg){ if(doneGuard) return; done(emoji,msg); }
+
+const LESSONS=[
+  { title:{ko:"① 한 번 클릭 — 도형 선택",en:"① One click — select the shape"},
+    instr:{ko:"카드를 <b>한 번</b> 눌러 <b>도형 전체</b>를 선택하세요.",en:"<b>Click once</b> to select the <b>whole shape</b>."},
+    hint:{ko:"한 번 클릭 = 도형(틀) 전체가 선택돼요.",en:"One click = the whole shape (frame) is selected."},
+    render(stage,done){
+      CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#3b82f6",text:T({ko:"제목",en:"Title"})}]);
+      CANVAS.onEvent=(ev)=>{ if(ev==="select") once(done,"🟦",{ko:"도형 전체가 선택됐어요! 🎉",en:"The whole shape is selected! 🎉"}); };
+    }},
+
+  { title:{ko:"② 두 번 클릭 — 글자 편집",en:"② Double-click — edit the text"},
+    instr:{ko:"같은 카드를 <b>두 번(더블클릭)</b> 눌러 안의 <b>글자</b>를 고치는 단계로 들어가세요.",en:"<b>Double-click</b> the same card to go into the <b>text</b> so you can edit it."},
+    hint:{ko:"두 번 클릭하면 더 깊이 들어가 글자가 선택돼요.",en:"Double-clicking goes deeper and selects the text."},
+    render(stage,done){
+      CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#8b5cf6",text:T({ko:"제목",en:"Title"})}],{select:"card"});
+      CANVAS.onEvent=(ev)=>{ if(ev==="scope") once(done,"🔤",{ko:"글자 편집 단계로 들어왔어요! 이제 글자를 고칠 수 있어요 🎉",en:"You're in the text now! You can edit the words 🎉"}); };
+    }},
+
+  { title:{ko:"③ 빈 곳 클릭 — 밖으로 나오기",en:"③ Click empty — step back out"},
+    instr:{ko:"편집이 끝나면 <b>빈 곳</b>을 눌러 다시 <b>밖으로</b> 나오세요.",en:"When you're done, click an <b>empty spot</b> to step <b>back out</b>."},
+    hint:{ko:"빈 곳을 누르면 선택이 풀리고 한 단계 밖으로 나와요.",en:"Clicking empty deselects and steps you back out a level."},
+    render(stage,done){
+      CANVAS=makeCanvas(stage,[{id:"card",x:230,y:150,w:200,h:150,fill:"#ec4899",text:T({ko:"제목",en:"Title"})}],{select:"card"});
+      CANVAS.onEvent=(ev)=>{ if(ev==="deselect") once(done,"⬜",{ko:"밖으로 잘 나왔어요! 🎉",en:"You stepped back out! 🎉"}); };
+    }},
+
+  { title:{ko:"④ 맨 앞으로 보내기",en:"④ Bring to front"},
+    instr:{ko:"<b>빨간</b> 카드가 파란 카드에 가려져 있어요. 빨간 카드를 선택하고 <b>‘맨 앞으로’</b>를 눌러 위로 올리세요.",en:"The <b>red</b> card is hidden behind the blue one. Select the red card, then press <b>‘To front’</b>."},
+    hint:{ko:"먼저 빨간 카드를 누른 뒤, 아래 ‘맨 앞으로’ 단추를 누르세요.",en:"First tap the red card, then press the ‘To front’ button below."},
+    render(stage,done){
+      CANVAS=makeCanvas(stage,[
+        {id:"red",x:210,y:150,w:200,h:150,fill:"#ef4444",text:T({ko:"빨강",en:"Red"})},
+        {id:"blue",x:300,y:210,w:200,h:150,fill:"#3b82f6",text:T({ko:"파랑",en:"Blue"})}
+      ],{toolbar:true,tip:{ko:"빨간 카드를 눌러 선택한 뒤 ‘맨 앞으로’를 누르세요.",en:"Select the red card, then press ‘To front’."}});
+      CANVAS.onEvent=(ev,d)=>{ if(ev==="reorder"){ const o=d.order; if(o[o.length-1]==="red") once(done,"⤒",{ko:"빨간 카드를 맨 앞으로 올렸어요! 🎉",en:"You brought the red card to the front! 🎉"}); } };
+    }},
+
+  { title:{ko:"⑤ 맨 뒤로 보내기",en:"⑤ Send to back"},
+    instr:{ko:"<b>파란</b> 카드가 빨간 카드를 가리고 있어요. 파란 카드를 선택하고 <b>‘맨 뒤로’</b>를 눌러 뒤로 보내세요.",en:"The <b>blue</b> card is covering the red one. Select the blue card, then press <b>‘To back’</b>."},
+    hint:{ko:"먼저 파란 카드를 누른 뒤, 아래 ‘맨 뒤로’ 단추를 누르세요.",en:"First tap the blue card, then press the ‘To back’ button below."},
+    render(stage,done){
+      CANVAS=makeCanvas(stage,[
+        {id:"red",x:210,y:150,w:200,h:150,fill:"#ef4444",text:T({ko:"빨강",en:"Red"})},
+        {id:"blue",x:300,y:210,w:200,h:150,fill:"#3b82f6",text:T({ko:"파랑",en:"Blue"})}
+      ],{toolbar:true,tip:{ko:"파란 카드를 눌러 선택한 뒤 ‘맨 뒤로’를 누르세요.",en:"Select the blue card, then press ‘To back’."}});
+      CANVAS.onEvent=(ev,d)=>{ if(ev==="reorder"){ const o=d.order; if(o[0]==="blue") once(done,"⤓",{ko:"파란 카드를 맨 뒤로 보냈어요! 이제 빨강이 앞에 보여요 🎉",en:"You sent the blue card to the back! Now red shows in front 🎉"}); } };
+    }},
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false; CANVAS=null;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(stage,onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:layers","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>
