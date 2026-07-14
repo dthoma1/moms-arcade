@@ -121,8 +121,28 @@
   .toggle.on::after{left:41px;}
   .swlab{font-size:13px;font-weight:800;color:#64748b;}
 
-  /* ===== bulb binary counting (level 3) ===== */
+  /* ===== bulb binary table (level 3) ===== */
   .bulb.sm{font-size:60px;}
+  .binHead{font-size:19px;font-weight:900;color:#334155;}
+  .doItBtn{border:2.5px solid #1f2937;background:#fff;color:#1f2937;font-size:14.5px;font-weight:800;
+    padding:9px 22px;border-radius:999px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .doItBtn:hover{background:#f1f5f9;}
+  .doItBtn:disabled{opacity:.45;cursor:default;}
+  .binTable{width:100%;max-width:430px;margin:0 auto;border:3px solid #1f2937;border-radius:14px;overflow:hidden;background:#fafafa;}
+  .binRow{display:flex;align-items:stretch;border-top:3px solid #1f2937;}
+  .binRow:first-child{border-top:none;}
+  .binRow.ok{background:#f0fdf4;}
+  .binNum{flex:0 0 72px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#374151;border-right:3px solid #1f2937;}
+  .binCells{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 10px;position:relative;}
+  .binBit{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;user-select:none;}
+  .binBit .blb{font-size:30px;line-height:1;filter:grayscale(1) brightness(.72);transition:filter .18s,transform .18s;}
+  .binBit.on .blb{filter:none;transform:scale(1.08);}
+  .binBit .bv{font-size:15px;font-weight:800;color:#94a3b8;transition:color .15s;}
+  .binBit.on .bv{color:#d97706;}
+  .binBit.lock{cursor:default;}
+  .binChk{position:absolute;right:12px;font-size:26px;opacity:0;transform:scale(.5);transition:opacity .25s,transform .25s;pointer-events:none;}
+  .binChk.show{opacity:1;transform:scale(1);}
+
   .bigNum{font-size:60px;font-weight:900;color:var(--accent);line-height:1;transition:color .2s;}
   .bigNum.hit{color:var(--good);animation:pop .4s ease;}
   .binBulbs{display:flex;gap:34px;justify-content:center;align-items:flex-start;}
@@ -362,39 +382,67 @@ const levels=[
       });
     } },
 
-  { title:{ko:"전구로 숫자 쓰기 · 0부터 3까지",en:"Write numbers with bulbs · 0 to 3"},
-    instr:{ko:"이번엔 전구 두 개로 숫자를 써 봐요! 켜짐=1, 꺼짐=0. 왼쪽 전구는 '2', 오른쪽 전구는 '1'을 뜻해요.",en:"Now let's write numbers with two bulbs! ON=1, OFF=0. The left bulb means '2', the right means '1'."},
-    hint:{ko:"전구를 켜고 꺼서 위에 보이는 숫자를 만들어요.",en:"Turn the bulbs on/off to make the number shown above."},
+  { title:{ko:"이진법으로 써 봐요!",en:"Let's write with binary!"},
+    instr:{ko:"각 줄의 전구를 톡톡 눌러 왼쪽 숫자를 0과 1로 써 보세요. 켜짐=1, 꺼짐=0. 맞으면 초록 체크 ✅가 나와요.",en:"Tap the bulbs in each row to write the number on the left in 0s and 1s. ON=1, OFF=0. A green check ✅ appears when it's right."},
+    hint:{ko:"맨 오른쪽 전구가 1, 그 왼쪽이 2를 뜻해요. 어려우면 '대신 해 주세요'를 눌러 보세요.",en:"The rightmost bulb means 1, the next one means 2. Stuck? Tap 'Do it for me.'"},
     build(st,done){
-      const targets=[0,1,2,3]; let ti=0, busy=false; const bits=[1,1];
+      const targets=[0,1,2,3]; const NB=4;
+      const toBits=n=>{const a=[];for(let k=NB-1;k>=0;k--)a.push((n>>k)&1);return a;};
+      const state=targets.map((n,r)=> r===0 ? toBits(n) : [0,0,0,0]);
+      const solved=targets.map((_,r)=>r===0);
+      let running=false;
       st.innerHTML=`<div class="stageCol">
-        <div class="subcapt">${T({ko:"이 숫자를 만들어요:",en:"Make this number:"})}</div>
-        <div class="bigNum" id="bn">0</div>
-        <div class="binBulbs">
-          <div class="bunit"><div class="bulb sm on" id="bl0">💡</div><div class="toggle on" id="tg0"></div><div class="pv">${T({ko:"2의 자리",en:"the 2s"})}</div></div>
-          <div class="bunit"><div class="bulb sm on" id="bl1">💡</div><div class="toggle on" id="tg1"></div><div class="pv">${T({ko:"1의 자리",en:"the 1s"})}</div></div>
+        <div class="binHead">${T({ko:"이진법으로 써 봐요!",en:"Let's write with binary!"})}</div>
+        <button class="doItBtn" id="doIt">${T({ko:"대신 해 주세요",en:"Do it for me."})}</button>
+        <div class="binTable" id="tbl">
+          ${targets.map((n,r)=>`<div class="binRow${solved[r]?' ok':''}" data-r="${r}">
+            <div class="binNum">${n}</div>
+            <div class="binCells">
+              ${[0,1,2,3].map(c=>`<div class="binBit${state[r][c]?' on':''}${r===0?' lock':''}" data-r="${r}" data-c="${c}">
+                <div class="blb">💡</div><div class="bv">${state[r][c]}</div></div>`).join("")}
+              <div class="binChk${solved[r]?' show':''}">✅</div>
+            </div>
+          </div>`).join("")}
         </div>
-        <div class="readout" id="ro"></div>
       </div>`;
-      const BL=[st.querySelector("#bl0"),st.querySelector("#bl1")];
-      const TG=[st.querySelector("#tg0"),st.querySelector("#tg1")];
-      const bn=st.querySelector("#bn"),ro=st.querySelector("#ro");
-      const val=()=>bits[0]*2+bits[1];
-      function renderRO(){ ro.innerHTML=`${bits[0]}${bits[1]} <span style="color:#94a3b8">=</span> <b>${val()}</b>`; }
-      function renderTarget(){ bn.textContent=targets[ti]; bn.classList.remove("hit"); }
-      function sync(i){ BL[i].classList.toggle("on",!!bits[i]); TG[i].classList.toggle("on",!!bits[i]); }
-      TG.forEach((tg,i)=>tg.addEventListener("click",()=>{
-        if(locked||busy)return; clearFocus(); bits[i]=bits[i]?0:1; beep(bits[i]?720:400,.09); sync(i); renderRO();
-        if(val()===targets[ti]){
-          busy=true; bn.classList.add("hit"); beep(900,.11);
-          setTimeout(()=>{ ti++;
-            if(ti>=targets.length){ done("🔢",{ko:"0, 1, 2, 3을 전구로 다 썼어요!",en:"You wrote 0, 1, 2, 3 with bulbs!"}); }
-            else { busy=false; renderTarget(); renderRO(); }
-          },650);
+      const rows=[...st.querySelectorAll(".binRow")];
+      const doIt=st.querySelector("#doIt");
+      function syncBit(r,c){
+        const bit=st.querySelector(`.binBit[data-r="${r}"][data-c="${c}"]`);
+        bit.classList.toggle("on",!!state[r][c]);
+        bit.querySelector(".bv").textContent=state[r][c];
+      }
+      function checkRow(r){
+        const ok=state[r].reduce((a,b,i)=>a+b*(1<<(NB-1-i)),0)===targets[r];
+        rows[r].classList.toggle("ok",ok);
+        rows[r].querySelector(".binChk").classList.toggle("show",ok);
+        const was=solved[r]; solved[r]=ok;
+        if(ok&&!was){ beep(900,.11); chime&&chime(); }
+        if(solved.every(Boolean)&&!running){
+          setTimeout(()=>done("🔢",{ko:"모든 숫자를 0과 1로 다 썼어요!",en:"You wrote every number in 0s and 1s!"}),400);
         }
-      }));
-      sync(0); sync(1); renderRO(); renderTarget();
-      requestAnimationFrame(()=>focusEl(TG[0]));
+      }
+      function toggle(r,c){
+        if(running||locked||r===0)return; clearFocus();
+        state[r][c]=state[r][c]?0:1; beep(state[r][c]?720:400,.08); syncBit(r,c); checkRow(r);
+      }
+      st.querySelectorAll(".binBit").forEach(b=>b.addEventListener("click",()=>toggle(+b.dataset.r,+b.dataset.c)));
+      doIt.addEventListener("click",async()=>{
+        if(running)return; running=true; doIt.disabled=true; clearFocus();
+        for(let r=1;r<targets.length;r++){
+          const want=toBits(targets[r]);
+          for(let c=0;c<NB;c++){
+            if(state[r][c]!==want[c]){ state[r][c]=want[c]; beep(want[c]?720:400,.08); syncBit(r,c);
+              await new Promise(res=>setTimeout(res,320)); }
+          }
+          rows[r].classList.add("ok"); rows[r].querySelector(".binChk").classList.add("show");
+          solved[r]=true; beep(900,.11);
+          await new Promise(res=>setTimeout(res,360));
+        }
+        running=false;
+        setTimeout(()=>done("🔢",{ko:"모든 숫자를 0과 1로 다 썼어요!",en:"You wrote every number in 0s and 1s!"}),500);
+      });
+      requestAnimationFrame(()=>focusEl(rows[1]));
     } },
 
   { title:{ko:"0과 1 · 이진법",en:"0s and 1s · binary"},
