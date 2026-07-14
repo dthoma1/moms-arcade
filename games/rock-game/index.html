@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>컴퓨터는 왜 '생각하는 돌'일까요?</title>
+<style>
+  :root{
+    --bg1:#f5f3ff; --bg2:#fef9ec; --ink:#1f2937; --soft:#6b7280;
+    --accent:#8b5cf6; --accent2:#f59e0b; --good:#22c55e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#8b5cf6;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f7f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#ede9fe;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:none;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(139,92,246,.12);padding:26px 22px;text-align:center;}
+  #introArt{font-size:74px;line-height:1;margin-bottom:6px;animation:pop .5s ease;}
+  #introTitle{font-size:23px;font-weight:800;margin-bottom:8px;}
+  #introText{font-size:16px;color:#374151;line-height:1.6;max-width:560px;}
+  #introText b{color:var(--accent);}
+  .introBtns{display:flex;gap:12px;margin-top:20px;}
+  .introBtns button{font-size:16px;font-weight:700;border-radius:999px;padding:11px 26px;cursor:pointer;border:none;}
+  #introBack{background:#f1f5f9;color:#64748b;}
+  #introNext{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #dots{display:flex;gap:7px;margin-top:16px;}
+  #dots .d{width:9px;height:9px;border-radius:50%;background:#e5e7eb;}
+  #dots .d.on{background:var(--accent);}
+
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(139,92,246,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:14.5px;margin-top:2px;}
+  #banner .hint{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:auto;
+    background:linear-gradient(135deg,#f3f0ff,#fef6e6);display:flex;align-items:center;justify-content:center;padding:16px;}
+
+  .stageCol{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;width:100%;}
+  .capt{font-size:16px;font-weight:800;color:#334155;}
+  .subcapt{font-size:13.5px;color:#64748b;max-width:460px;line-height:1.5;}
+
+  .tapBig{font-size:104px;cursor:pointer;user-select:none;transition:transform .35s ease,opacity .35s;line-height:1;}
+  .tapBig:active{transform:scale(.9);}
+  .tapBig.gone{transform:scale(.4);opacity:0;}
+  .wafer{font-size:104px;animation:pop .5s ease;}
+
+  .bulb{font-size:96px;filter:grayscale(1) brightness(.72);transition:filter .25s,transform .2s;}
+  .bulb.on{filter:none;transform:scale(1.06);}
+  .toggle{width:82px;height:44px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;transition:background .2s;}
+  .toggle.on{background:#22c55e;}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:left .2s;}
+  .toggle.on::after{left:41px;}
+  .swlab{font-size:13px;font-weight:800;color:#64748b;}
+
+  .bitrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .bit{display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .bcell{width:48px;height:48px;border-radius:11px;background:#e2e8f0;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8;cursor:pointer;transition:.15s;}
+  .bcell.lit{background:#fde047;border-color:#eab308;color:#78350f;box-shadow:0 0 12px rgba(250,204,21,.6);}
+  .bnum{font-size:16px;font-weight:800;color:#334155;}
+  .target .bcell{cursor:default;width:36px;height:36px;font-size:13px;}
+  .target .bcell.lit{background:#fbbf24;}
+  .readout{font-size:15px;font-weight:800;color:#475569;}
+
+  .invRow{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;}
+  .invCard{width:158px;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:12px 10px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);transition:.15s;text-align:center;}
+  .invCard:hover{border-color:var(--accent);}
+  .invCard .face{font-size:40px;}
+  .invCard .nm{font-weight:800;font-size:14px;margin-top:3px;}
+  .invCard .yr{font-size:11.5px;color:#94a3b8;}
+  .invCard .q{font-size:22px;color:#cbd5e1;margin-top:4px;}
+  .invCard .contrib{font-size:12.5px;color:#475569;margin-top:6px;line-height:1.45;display:none;}
+  .invCard.open{border-color:var(--good);background:#f0fdf4;}
+  .invCard.open .q{display:none;}
+  .invCard.open .contrib{display:block;}
+
+  .chipBtn{width:150px;height:150px;border-radius:16px;background:linear-gradient(135deg,#3c3f47,#1f2126);
+    box-shadow:0 8px 22px rgba(0,0,0,.5),inset 0 0 0 3px #55585f;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;color:#e5e7eb;font-size:44px;transition:transform .2s;}
+  .chipBtn:active{transform:scale(.95);}
+  .tgrid{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;width:min(330px,84%);}
+  .tcell{aspect-ratio:1;border-radius:2px;background:#22d3ee;opacity:0;animation:tin .01s linear forwards;}
+  @keyframes tin{to{opacity:.85;}}
+  .counter{font-size:19px;font-weight:800;color:var(--accent);}
+
+  .ingRow{display:flex;gap:8px;align-items:center;justify-content:center;font-size:30px;flex-wrap:wrap;}
+  .ing{display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .6s ease,opacity .6s;}
+  .ing .il{font-size:12px;font-weight:800;color:#475569;}
+  .ing.merge{transform:translateX(0) scale(.3);opacity:0;}
+  .combBtn{margin-top:4px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),#a855f7);border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  .brain{font-size:110px;animation:pop .6s ease;}
+
+  .focusRing{position:absolute;border:4px solid rgba(245,158,11,.95);border-radius:50%;
+    width:120px;height:120px;pointer-events:none;z-index:18;transform:translate(-50%,-50%);
+    box-shadow:0 0 0 4px rgba(245,158,11,.22);animation:focusPulse 1.15s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.9;}
+    50%{transform:translate(-50%,-50%) scale(1.18);opacity:.5;}}
+
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.12);}100%{transform:scale(1);opacity:1;}}
+
+  #successOverlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.85);backdrop-filter:blur(3px);border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:21px;font-weight:800;color:var(--accent);margin-top:6px;text-align:center;padding:0 20px;}
+
+  .confetti{position:fixed;top:-24px;z-index:120;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+    padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="introView">
+      <div id="introArt"></div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button id="introBack" onclick="prevIntro()"></button>
+        <button id="introNext" onclick="nextIntro()"></button>
+      </div>
+      <div id="dots"></div>
+    </div>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="hint" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#8b5cf6;background:#f3f0ff;border:1px solid #ddd6fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"컴퓨터는 왜 '생각하는 돌'일까요?",en:"Why Is a Computer a Thinking Rock?"},
+  h1:{ko:"🪨 왜 '생각하는 돌'일까요?",en:"🪨 Why a Thinking Rock?"},
+  sub:{ko:"돌이 어떻게 생각을 할까요? 실리콘·전기·0과 1의 마법을 하나씩 알아봐요 😊",en:"How can a rock think? Let's uncover the magic of silicon, electricity, and 0s and 1s 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  back:{ko:"‹ 뒤로",en:"‹ Back"}, next:{ko:"다음 ›",en:"Next ›"}, start:{ko:"시작하기 ›",en:"Let's start ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"생각하는 돌의 비밀을 풀었어요! 🎓",en:"You cracked the thinking-rock secret! 🎓"},
+  finalMsg:{ko:"실리콘 + 전기 + 0과 1 + 수십억 개의 작은 스위치 = 생각하는 돌. 정말 멋지게 해내셨어요 💖",en:"Silicon + electricity + 0s and 1s + billions of tiny switches = a thinking rock. Wonderfully done 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  hintPrefix:{ko:"💡 ",en:"💡 "}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(inIntro){ showIntro(introIdx); }
+  else if(!doneLock){ loadLevel(current); }
+}
+
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+const stage=document.getElementById("stage");
+function clearFocus(){ const r=stage.querySelector(".focusRing"); if(r)r.remove(); }
+function focusEl(el){
+  if(!el) return; let r=stage.querySelector(".focusRing");
+  if(!r){ r=document.createElement("div"); r.className="focusRing"; stage.appendChild(r); }
+  const s=stage.getBoundingClientRect(), b=el.getBoundingClientRect();
+  const sz=Math.max(70,Math.min(150,Math.max(b.width,b.height)+34));
+  r.style.width=sz+"px"; r.style.height=sz+"px";
+  r.style.left=(b.left-s.left+b.width/2)+"px"; r.style.top=(b.top-s.top+b.height/2)+"px";
+}
+const decimal=bits=>bits.reduce((a,b)=>a*2+b,0);
+
+/* ---------- lessons ---------- */
+const levels=[
+  { title:{ko:"실리콘 · 돌에서 시작해요",en:"Silicon · it starts as rock"},
+    instr:{ko:"컴퓨터의 몸은 '실리콘'이라는 돌로 만들어요. 모래(돌)를 아주 순수하게 녹여 얇은 판으로 잘라요.",en:"A computer's body is made from a rock called silicon. We melt sand (rock) into a pure crystal and slice it into thin wafers."},
+    hint:{ko:"모래·돌을 톡 눌러 반짝이는 판으로 바꿔 보세요.",en:"Tap the sand/rock to turn it into a shiny wafer."},
+    build(st,done){
+      st.innerHTML=`<div class="stageCol">
+        <div class="tapBig" id="rock">🪨</div>
+        <div class="capt" id="rcap">${T({ko:"모래 · 돌",en:"Sand · rock"})}</div>
+        <div class="subcapt">${T({ko:"이 흔한 돌이 컴퓨터의 재료예요.",en:"This ordinary rock is what computers are made from."})}</div>
+      </div>`;
+      const rock=st.querySelector("#rock"); requestAnimationFrame(()=>focusEl(rock));
+      rock.addEventListener("click",()=>{
+        if(locked)return; clearFocus(); rock.classList.add("gone"); beep(720,.12);
+        setTimeout(()=>{ rock.textContent="💿"; rock.className="wafer"; rock.style.transform="";
+          st.querySelector("#rcap").textContent=T({ko:"실리콘 웨이퍼",en:"Silicon wafer"});
+          done("💿",{ko:"돌이 반짝이는 판(웨이퍼)이 됐어요!",en:"The rock became a shiny wafer!"}); },360);
+      });
+    } },
+
+  { title:{ko:"전기 · 켜짐과 꺼짐",en:"Electricity · on and off"},
+    instr:{ko:"컴퓨터는 딱 두 가지만 알아요 — 전기가 '흐른다'(켜짐)와 '안 흐른다'(꺼짐).",en:"A computer knows just two things — electricity flowing (ON) or not flowing (OFF)."},
+    hint:{ko:"스위치를 눌러 불을 켜 보세요.",en:"Tap the switch to turn the light ON."},
+    build(st,done){
+      st.innerHTML=`<div class="stageCol">
+        <div class="bulb" id="bulb">💡</div>
+        <div class="swlab" id="slab">${T({ko:"꺼짐 (전기 없음)",en:"OFF (no power)"})}</div>
+        <div class="toggle" id="sw"></div>
+      </div>`;
+      const sw=st.querySelector("#sw"),bulb=st.querySelector("#bulb"),slab=st.querySelector("#slab");
+      requestAnimationFrame(()=>focusEl(sw));
+      sw.addEventListener("click",()=>{
+        if(locked)return; const on=!sw.classList.contains("on");
+        sw.classList.toggle("on",on); bulb.classList.toggle("on",on); beep(on?720:400,.1);
+        slab.textContent=on?T({ko:"켜짐 (전기 흐름)",en:"ON (power flows)"}):T({ko:"꺼짐 (전기 없음)",en:"OFF (no power)"});
+        if(on){ clearFocus(); done("💡",{ko:"불이 켜졌어요 — 이게 '켜짐'이에요!",en:"The light is ON — that's 'on'!"}); }
+      });
+    } },
+
+  { title:{ko:"0과 1 · 이진법",en:"0s and 1s · binary"},
+    instr:{ko:"켜짐=1, 꺼짐=0. 컴퓨터는 이 0과 1만으로 모든 걸 적어요. 이걸 '이진법'이라고 해요.",en:"ON=1, OFF=0. A computer writes everything using only 0s and 1s. This is called binary."},
+    hint:{ko:"아래 칸을 눌러 위 그림과 똑같은 불빛을 만들어 보세요.",en:"Tap the cells below to match the lit pattern shown above."},
+    build(st,done){
+      const targetBits=[1,0,1,1]; let bits=[0,0,0,0];
+      st.innerHTML=`<div class="stageCol">
+        <div class="subcapt">${T({ko:"이렇게 만들어 보세요:",en:"Make it look like this:"})}</div>
+        <div class="bitrow target" id="tgt"></div>
+        <div class="readout" id="tval"></div>
+        <div style="height:6px"></div>
+        <div class="bitrow" id="usr"></div>
+        <div class="readout" id="uval"></div>
+      </div>`;
+      const tgt=st.querySelector("#tgt"),usr=st.querySelector("#usr");
+      targetBits.forEach(b=>{ tgt.innerHTML+=`<div class="bit"><div class="bcell ${b?'lit':''}">${b}</div></div>`; });
+      st.querySelector("#tval").textContent=T({ko:"숫자로는 = ",en:"as a number = "})+decimal(targetBits);
+      function draw(){
+        usr.innerHTML="";
+        bits.forEach((b,i)=>{ const bit=document.createElement("div"); bit.className="bit";
+          bit.innerHTML=`<div class="bcell ${b?'lit':''}" data-i="${i}">${b}</div>`; usr.appendChild(bit); });
+        usr.querySelectorAll(".bcell").forEach(c=>c.addEventListener("click",()=>{
+          if(locked)return; const i=+c.dataset.i; bits[i]=bits[i]?0:1; beep(bits[i]?680:420,.07); draw();
+          st.querySelector("#uval").textContent=T({ko:"지금 = ",en:"now = "})+decimal(bits);
+          if(bits.join("")===targetBits.join("")){ clearFocus();
+            done("🔢",{ko:"똑같이 만들었어요 — 0과 1로 숫자를 적었어요!",en:"You matched it — a number written in 0s and 1s!"}); }
+        }));
+        const first=usr.querySelector('.bcell[data-i="0"]'); if(first) requestAnimationFrame(()=>focusEl(first));
+      }
+      draw(); st.querySelector("#uval").textContent=T({ko:"지금 = ",en:"now = "})+decimal(bits);
+    } },
+
+  { title:{ko:"누가 생각해 냈을까요?",en:"Who thought of this?"},
+    instr:{ko:"0과 1로 생각하는 컴퓨터는 세 수학자의 아이디어가 이어져 태어났어요. 카드를 눌러 만나 보세요.",en:"The 0/1 thinking computer was born from three mathematicians' ideas passed down. Tap each card to meet them."},
+    hint:{ko:"세 사람의 카드를 모두 눌러 보세요.",en:"Tap all three cards to reveal their story."},
+    build(st,done){
+      const inv=[
+        {face:"🧮",nm:{ko:"라이프니츠",en:"Leibniz"},yr:{ko:"1600~1700년대",en:"1600s–1700s"},
+         c:{ko:"0과 1만으로 모든 수를 적는 '이진법'을 정리했어요.",en:"Worked out 'binary' — writing every number with only 0 and 1."}},
+        {face:"✅",nm:{ko:"조지 불",en:"George Boole"},yr:{ko:"1800년대",en:"1800s"},
+         c:{ko:"참(1)과 거짓(0)으로 따지는 '논리'를 만들었어요.",en:"Created 'logic' that reasons with true (1) and false (0)."}},
+        {face:"💡",nm:{ko:"클로드 섀넌",en:"Claude Shannon"},yr:{ko:"1930년대",en:"1930s"},
+         c:{ko:"이 논리를 '전기 스위치'에 연결해, 현대 컴퓨터의 씨앗을 심었어요.",en:"Linked that logic to electric switches — planting the seed of the modern computer."}}
+      ];
+      st.innerHTML=`<div class="stageCol"><div class="invRow" id="row"></div>
+        <div class="subcapt" id="note">${T({ko:"셋 다 눌러 보세요.",en:"Tap all three."})}</div></div>`;
+      const row=st.querySelector("#row"); let opened=0;
+      inv.forEach((p,idx)=>{ const c=document.createElement("div"); c.className="invCard";
+        c.innerHTML=`<div class="face">${p.face}</div><div class="nm">${T(p.nm)}</div><div class="yr">${T(p.yr)}</div>
+          <div class="q">＋</div><div class="contrib">${T(p.c)}</div>`;
+        c.addEventListener("click",()=>{ if(locked||c.classList.contains("open"))return;
+          c.classList.add("open"); beep(600+idx*80,.08); opened++;
+          if(opened>=inv.length){ clearFocus();
+            st.querySelector("#note").textContent=T({ko:"이 셋이 이어져 오늘의 컴퓨터가 됐어요! 🔗",en:"These three, connected, became today's computer! 🔗"});
+            done("🧠",{ko:"세 사람의 아이디어가 이어졌어요!",en:"Three ideas, linked together!"}); }
+        });
+        row.appendChild(c);
+      });
+      requestAnimationFrame(()=>focusEl(row.firstChild));
+    } },
+
+  { title:{ko:"트랜지스터 · 아주 작은 스위치",en:"Transistors · tiny switches"},
+    instr:{ko:"섀넌의 스위치를 아주 작게 만든 게 '트랜지스터'예요. 손톱만 한 칩 안에 수십억 개가 들어 있어요!",en:"A 'transistor' is Shannon's switch made microscopic. A fingernail-sized chip holds billions of them!"},
+    hint:{ko:"칩을 눌러 안을 확대해 보세요.",en:"Tap the chip to zoom inside."},
+    build(st,done){
+      st.innerHTML=`<div class="stageCol">
+        <div class="chipBtn" id="chip">🔲</div>
+        <div class="counter" id="cnt">${T({ko:"스위치 1개 → ?",en:"1 switch → ?"})}</div>
+        <div class="subcapt">${T({ko:"칩을 누르면 안이 보여요.",en:"Tap the chip to look inside."})}</div>
+      </div>`;
+      const chip=st.querySelector("#chip"); requestAnimationFrame(()=>focusEl(chip));
+      chip.addEventListener("click",()=>{
+        if(locked)return; locked=true; clearFocus(); beep(700,.12);
+        const grid=document.createElement("div"); grid.className="tgrid";
+        const N=140; for(let i=0;i<N;i++){ const c=document.createElement("div"); c.className="tcell";
+          c.style.animationDelay=(i*6)+"ms"; grid.appendChild(c); }
+        chip.replaceWith(grid);
+        const cnt=st.querySelector("#cnt"); let shown=0;
+        const iv=setInterval(()=>{ shown+=Math.ceil(Math.random()*40)+10;
+          cnt.textContent=T({ko:"작은 스위치 ",en:""})+shown.toLocaleString()+T({ko:"개…",en:" tiny switches…"});
+          if(shown>200){ clearInterval(iv); cnt.textContent=T({ko:"→ 진짜 칩엔 수십억 개! 🤯",en:"→ real chips hold billions! 🤯"}); } },90);
+        setTimeout(()=>done("🔀",{ko:"작은 스위치가 아주아주 많아요!",en:"So very many tiny switches!"}),1500);
+      });
+    } },
+
+  { title:{ko:"다 합치면 · 생각하는 돌",en:"Put it together · a thinking rock"},
+    instr:{ko:"실리콘(돌) + 전기 + 0과 1 + 수십억 개의 작은 스위치 = 생각하는 돌! 버튼을 눌러 합쳐 보세요.",en:"Silicon (rock) + electricity + 0s and 1s + billions of tiny switches = a thinking rock! Press to combine them."},
+    hint:{ko:"'합치기' 버튼을 눌러 보세요.",en:"Tap the 'Combine' button."},
+    build(st,done){
+      st.innerHTML=`<div class="stageCol">
+        <div class="ingRow" id="ings">
+          <div class="ing"><span>🪨</span><span class="il">${T({ko:"실리콘",en:"silicon"})}</span></div>
+          <span>＋</span>
+          <div class="ing"><span>⚡</span><span class="il">${T({ko:"전기",en:"power"})}</span></div>
+          <span>＋</span>
+          <div class="ing"><span>🔢</span><span class="il">${T({ko:"0과 1",en:"0s & 1s"})}</span></div>
+          <span>＋</span>
+          <div class="ing"><span>🔀</span><span class="il">${T({ko:"스위치",en:"switches"})}</span></div>
+        </div>
+        <button class="combBtn" id="comb">${T({ko:"합치기 ✨",en:"Combine ✨"})}</button>
+        <div id="result"></div>
+      </div>`;
+      const comb=st.querySelector("#comb"); requestAnimationFrame(()=>focusEl(comb));
+      comb.addEventListener("click",()=>{
+        if(locked)return; locked=true; clearFocus(); beep(660,.12);
+        st.querySelectorAll(".ing").forEach(i=>i.classList.add("merge"));
+        comb.style.display="none";
+        setTimeout(()=>{ st.querySelector("#result").innerHTML=`<div class="brain">🧠</div>
+          <div class="capt">${T({ko:"생각하는 돌!",en:"A thinking rock!"})}</div>`;
+          done("🧠",{ko:"돌이 생각을 하게 됐어요!",en:"The rock can think now!"}); },700);
+      });
+    } }
+];
+
+let inIntro=true, introIdx=0;
+const INTRO=[
+  { art:"🪨", title:{ko:"컴퓨터는 사실… 돌이에요",en:"A computer is really… a rock"},
+    html:{ko:"조금 웃긴 사실! 컴퓨터는 특별하게 다듬은 <b>돌</b>이에요. 돌이 어떻게 생각을 할까요? 비밀은 세 가지 — <b>실리콘</b>, <b>전기</b>, 그리고 <b>0과 1</b>이에요.",
+          en:"A funny truth! A computer is a specially prepared <b>rock</b>. How can a rock think? The secret has three parts — <b>silicon</b>, <b>electricity</b>, and <b>0s and 1s</b>."} },
+  { art:"✨", title:{ko:"마법을 하나씩 풀어봐요",en:"Let's unpack the magic"},
+    html:{ko:"돌을 얇게 잘라 그 위에 아주 작은 <b>스위치</b>를 수십억 개 새겨요. 스위치가 <b>켜지고 꺼지는</b> 것으로 0과 1을 만들고, 그게 모여 계산과 생각이 돼요. 이제 직접 해봐요!",
+          en:"We slice the rock thin and carve billions of tiny <b>switches</b> onto it. Switches turning <b>on and off</b> make 0s and 1s, and together they become calculation and thought. Let's try it!"} }
+];
+function showIntro(i){
+  inIntro=true; introIdx=i;
+  els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none"; els.skip.style.display="none";
+  const s=INTRO[i];
+  document.getElementById("introArt").textContent=s.art;
+  document.getElementById("introTitle").textContent=T(s.title);
+  document.getElementById("introText").innerHTML=T(s.html);
+  document.getElementById("introBack").style.visibility=i===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=i===INTRO.length-1?T(UI.start):T(UI.next);
+  const dots=document.getElementById("dots"); dots.innerHTML="";
+  INTRO.forEach((_,k)=>{const d=document.createElement("div");d.className="d"+(k===i?" on":"");dots.appendChild(d);});
+  els.bar.style.width="0%"; els.step.textContent="";
+}
+function nextIntro(){ if(introIdx<INTRO.length-1) showIntro(introIdx+1); else startLessons(); }
+function prevIntro(){ if(introIdx>0) showIntro(introIdx-1); }
+function startLessons(){ inIntro=false; els.intro.style.display="none"; els.main.style.display="flex"; els.skip.style.display="block"; loadLevel(0); }
+
+let current=0, doneLock=false, locked=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+
+function once(fn){ let used=false; return (...a)=>{ if(used)return; used=true; fn(...a); }; }
+function loadLevel(i){
+  locked=false; clearFocus();
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent=T(UI.hintPrefix)+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  stage.innerHTML="";
+  requestAnimationFrame(()=>lv.build(stage,once(onLevelDone)));
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+    setTimeout(()=>{ els.overlay.style.display="none"; doneLock=false;
+      current++; if(current>=levels.length) showFinal(); else loadLevel(current); },1600);
+  },550);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:rock","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.final.style.display="none"; showIntro(0); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); showIntro(0);
+</script>
+</body>
+</html>

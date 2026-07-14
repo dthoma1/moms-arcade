@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>템플릿 사용하기 · Using Templates</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#ec4899;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--soft:#6b7280;--cv:#7c3aed;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:linear-gradient(160deg,#f5f3ff,#fdf2f8);color:#1f2937;-webkit-font-smoothing:antialiased;}
+  #app{max-width:820px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:12px 14px 24px;}
+  header{position:relative;text-align:center;}
+  #langToggle{position:absolute;top:0;right:0;display:flex;gap:4px;}
+  #langToggle button{font-size:14px;font-weight:700;border:1px solid #ddd6fe;background:#fff;color:#7c3aed;border-radius:999px;padding:5px 11px;cursor:pointer;}
+  #langToggle button.on{background:#7c3aed;color:#fff;}
+  #homeBtn{position:absolute;top:0;left:0;text-decoration:none;font-size:15px;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:999px;padding:6px 12px;}
+  h1{font-size:23px;margin:6px 0 2px;}
+  .sub{font-size:15px;color:var(--soft);margin:0 0 8px;}
+  #progressWrap{height:9px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px auto 4px;max-width:520px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
+  #stepText{font-size:13px;color:var(--soft);margin-bottom:8px;}
+  #card{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;}
+  .ghostBtn{position:absolute;top:-2px;right:0;font-size:13px;color:#9ca3af;background:none;border:none;cursor:pointer;z-index:5;}
+
+  /* intro */
+  #introView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;
+    background:#fff;border-radius:18px;padding:26px 22px;box-shadow:0 12px 30px rgba(124,58,237,.14);}
+  #introArt{font-size:74px;}
+  #introTitle{font-size:24px;font-weight:800;}
+  #introText{font-size:17px;line-height:1.7;max-width:580px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;font-size:30px;}
+  .scene .arw{color:#9ca3af;font-size:24px;}
+  .introBtns{display:flex;gap:12px;margin-top:6px;}
+  .big{font-size:17px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(124,58,237,.3);}
+  .big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);box-shadow:none;}
+
+  /* main */
+  #mainView{flex:1;display:flex;flex-direction:column;min-height:0;}
+  #banner{background:#fff;border-radius:14px;padding:11px 15px;box-shadow:0 8px 20px rgba(124,58,237,.10);margin-bottom:10px;}
+  #banner .t{font-size:18px;font-weight:800;color:var(--accent);}
+  #banner .i{font-size:16px;margin-top:3px;line-height:1.5;}
+  #banner .i b{color:var(--accent2);}
+  #banner .hint{font-size:14px;color:var(--soft);margin-top:4px;}
+  #stage{position:relative;flex:1;min-height:0;display:flex;}
+
+  /* ---- simplified Canva mock ---- */
+  .canva{position:relative;flex:1;display:flex;min-height:340px;background:#fff;border:1px solid #e5e7eb;
+    border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(124,58,237,.12);}
+  .cvside{width:132px;flex:none;background:#f7f7fb;border-right:1px solid #ececf3;padding:12px 8px;display:flex;flex-direction:column;gap:3px;}
+  .cvlogo{font-family:"Brush Script MT","Segoe Script",cursive;font-size:24px;font-weight:800;
+    background:linear-gradient(90deg,#00c4cc,#7c3aed,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;padding:2px 6px 8px;}
+  .cvnav{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#4b5563;background:none;border:none;
+    border-radius:10px;padding:9px 8px;cursor:pointer;text-align:left;width:100%;}
+  .cvnav .ic{font-size:17px;}
+  .cvnav:hover{background:#efeaff;}
+  .cvnav.on{background:#efeaff;color:var(--cv);}
+  .cvmain{flex:1;min-width:0;overflow:auto;padding:14px 16px;}
+  .cvtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .cvtitle{font-size:20px;font-weight:800;color:#1f2937;}
+  .cvsearch{flex:1;max-width:280px;display:flex;align-items:center;gap:8px;color:#9ca3af;font-size:14px;
+    background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:8px 14px;}
+
+  /* choose: blank vs template */
+  .pickrow{display:flex;gap:20px;flex-wrap:wrap;align-items:stretch;justify-content:center;padding:6px 4px;}
+  .pickitem{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .pagecard{width:150px;height:200px;border-radius:12px;cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .12s ease,box-shadow .12s ease;border:1px solid #eef0f4;}
+  .pagecard:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(124,58,237,.2);}
+  .pagecard.blank{background:#fff;display:flex;align-items:center;justify-content:center;}
+  .pagecard.blank .bl{color:#c7cbd6;font-size:15px;font-weight:700;}
+  .picklabel{font-size:14px;font-weight:800;color:#4b5563;}
+  .pagecard.shakeX{animation:shakeX .3s ease;}
+
+  /* template gallery */
+  .cvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px;}
+  .tpl{background:#fff;border:1px solid #eef0f4;border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.07);
+    cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
+  .tpl:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(124,58,237,.18);}
+  .tplthumb{height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;text-align:center;padding:8px;}
+  .tplthumb .big-emoji{font-size:34px;}
+  .tplthumb .tl{font-size:15px;font-weight:900;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.18);}
+  .tplthumb .ts{font-size:11px;opacity:.92;}
+  .tplcap{padding:7px 9px;font-size:13px;font-weight:700;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* template preview modal */
+  .tprev{position:absolute;inset:0;background:rgba(30,20,50,.45);display:flex;align-items:center;justify-content:center;z-index:35;padding:16px;animation:fadeIn .18s ease;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .tprevBox{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3);max-width:300px;width:100%;}
+  .tprevBig{height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;padding:10px;}
+  .tprevBig .big-emoji{font-size:46px;}
+  .tprevBig .tl{font-size:22px;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.2);}
+  .tprevBody{padding:14px 16px;text-align:center;}
+  .tprevName{font-size:16px;font-weight:800;color:#1f2937;margin-bottom:10px;}
+  .useBtn{font-size:16px;font-weight:900;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:12px 22px;cursor:pointer;box-shadow:0 6px 16px rgba(124,58,237,.32);width:100%;}
+  .tprevClose{background:none;border:none;color:#9ca3af;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+
+  /* editor */
+  .editor{position:relative;flex:1;display:flex;flex-direction:column;min-height:340px;background:#eef0f4;border:1px solid #e5e7eb;
+    border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(124,58,237,.12);}
+  .edbar{height:38px;flex:none;background:#fff;border-bottom:1px solid #e8e8ef;display:flex;align-items:center;gap:8px;padding:0 12px;}
+  .edbar .dot{width:11px;height:11px;border-radius:50%;}
+  .edbar .cvlogo{font-size:18px;padding:0;}
+  .edstage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;}
+  .edpage{position:relative;width:230px;height:290px;border-radius:8px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.18);}
+  .edel{position:absolute;cursor:pointer;user-select:none;transition:box-shadow .12s ease;}
+  .edtxt{left:18px;right:18px;text-align:center;padding:4px 6px;border-radius:6px;}
+  .edtxt.name{color:#fff;font-weight:900;font-size:20px;text-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .edtxt.deco{color:#fff;font-weight:800;font-size:15px;opacity:.95;text-shadow:0 1px 3px rgba(0,0,0,.22);}
+  .edphoto{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;
+    background:rgba(255,255,255,.85);border:2px dashed rgba(255,255,255,.9);}
+  .edel.sel{outline:none;}
+  .selbox{position:absolute;border:2px solid #3b82f6;border-radius:6px;pointer-events:none;z-index:8;box-sizing:content-box;margin:-3px;}
+  .selbox .hd{position:absolute;width:11px;height:11px;background:#fff;border:2px solid #3b82f6;border-radius:2px;}
+  .selbox .hd.tl{left:-6px;top:-6px;} .selbox .hd.tr{right:-6px;top:-6px;}
+  .selbox .hd.bl{left:-6px;bottom:-6px;} .selbox .hd.br{right:-6px;bottom:-6px;}
+  /* floating text editor */
+  .edpop{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:20;background:#fff;border-radius:14px;
+    box-shadow:0 14px 36px rgba(0,0,0,.24);padding:12px 14px;display:flex;flex-direction:column;gap:8px;align-items:stretch;width:250px;}
+  .edpop .lab{font-size:13px;font-weight:800;color:#374151;text-align:center;}
+  .edpop input{font-size:17px;font-weight:800;border:2px solid #ddd6fe;border-radius:10px;padding:9px 12px;text-align:center;color:#1f2937;outline:none;}
+  .edpop input:focus{border-color:var(--accent);}
+  .edpop .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+  .edpop .chip{font-size:14px;font-weight:800;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:999px;padding:6px 12px;cursor:pointer;}
+  .edpop .chip:hover{background:#ede9fe;}
+  .edpop .apply{font-size:15px;font-weight:900;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:10px;cursor:pointer;}
+  .photopick{display:flex;gap:10px;justify-content:center;}
+  .photopick .pp{width:52px;height:52px;border-radius:50%;border:2px solid #e5e7eb;font-size:26px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;background:#fff;transition:transform .1s ease,border-color .1s ease;}
+  .photopick .pp:hover{transform:scale(1.08);border-color:var(--accent);}
+
+  .cvtoast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#fff1f2;border:2px solid #fecdd3;
+    color:#be123c;font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.14);
+    z-index:30;animation:toastIn .2s ease;text-align:center;max-width:88%;}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes shakeX{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+  /* pulsing focus ring */
+  .focusRing{position:absolute;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;
+    border:3px solid var(--accent2);background:rgba(236,72,153,.10);pointer-events:none;z-index:18;
+    animation:focusPulse 1.4s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{box-shadow:0 0 0 0 rgba(236,72,153,.45);transform:scale(1);}
+    50%{box-shadow:0 0 0 12px rgba(236,72,153,0);transform:scale(1.12);}}
+
+  #successOverlay{position:absolute;left:8px;right:8px;bottom:8px;background:#f2fdf6;border:2px solid var(--good);
+    box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:40;padding:12px 14px;}
+  #successOverlay .be{font-size:38px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(124,58,237,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:96px;animation:pop .6s ease;}
+  #hubLink{display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:999px;padding:10px 18px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🎨</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="hint" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()" style="margin-top:14px;"></button>
+      <div><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"템플릿 사용하기 — 미리 만든 디자인",en:"Using Templates — Ready-made Designs"},
+  h1:{ko:"🎨 템플릿 사용하기 <span style='font-size:14px;color:#6b7280;'>(캔바)</span>",en:"🎨 Using Templates <span style='font-size:14px;color:#6b7280;'>(Canva)</span>"},
+  sub:{ko:"템플릿이 뭔지 · 왜 쓰는지 · 고르고 · 바꾸기",en:"What they are · why use them · pick & edit"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  prev:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  start:{ko:"시작하기 ▶",en:"Start ▶"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  home:{ko:"🏠 교실",en:"🏠 Classroom"},
+  finalTitle:{ko:"템플릿 마스터!",en:"Template master!"},
+  finalMsg:{ko:"이제 엄마는 <b>템플릿</b>이 뭔지 알아요 — 이미 예쁘게 만들어 둔 디자인이에요.<br><b>템플릿</b>에서 하나 고르고, <b>글자</b>와 <b>사진</b>만 내 것으로 바꾸면 끝! 빈 종이부터 시작할 필요가 없어요 💖",en:"Now you know what a <b>template</b> is — a design someone already made beautiful.<br>Just pick one from <b>Templates</b>, then swap in your own <b>words</b> and <b>photo</b>. No blank page needed 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").innerHTML=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  els.skip.textContent=T(UI.skip); els.introBack.textContent=T(UI.prev);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.querySelector("#homeBtn .ko").textContent=T(UI.home);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else if(!doneGuard) loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.12){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊"];for(let i=0;i<24;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- shared helpers ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+function once(done,emoji,msg){ if(doneGuard) return; done(emoji,msg); }
+function clearFocus(){ const r=stage.querySelector(".focusRing"); if(r) r.remove(); }
+function focusEl(el){
+  clearFocus(); if(!el) return;
+  const er=el.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  const ring=document.createElement("div"); ring.className="focusRing";
+  ring.style.left=(er.left+er.width/2-sr.left)+"px"; ring.style.top=(er.top+er.height/2-sr.top)+"px";
+  stage.appendChild(ring);
+}
+function focusSel(sel){ requestAnimationFrame(()=>focusEl(stage.querySelector(sel))); }
+function toast(host,msg){
+  const t=document.createElement("div"); t.className="cvtoast"; t.textContent=T(msg);
+  host.appendChild(t); setTimeout(()=>t.remove(),1700);
+}
+
+/* ---------- template catalog ---------- */
+const TEMPLATES=[
+  {id:"bday", g1:"#f472b6",g2:"#a855f7", emoji:"🎂", tl:{ko:"생일 축하해",en:"Happy Birthday"}, ts:{ko:"생일 카드",en:"Birthday card"}, cap:{ko:"생일 카드",en:"Birthday card"}},
+  {id:"invite", g1:"#60a5fa",g2:"#22d3ee", emoji:"💌", tl:{ko:"초대합니다",en:"You're Invited"}, ts:{ko:"초대장",en:"Invitation"}, cap:{ko:"초대장",en:"Invitation"}},
+  {id:"thanks", g1:"#34d399",g2:"#10b981", emoji:"🙏", tl:{ko:"고맙습니다",en:"Thank You"}, ts:{ko:"감사 카드",en:"Thank-you card"}, cap:{ko:"감사 카드",en:"Thank-you card"}},
+  {id:"poster", g1:"#fb923c",g2:"#f43f5e", emoji:"📣", tl:{ko:"모임 안내",en:"Get-together"}, ts:{ko:"포스터",en:"Poster"}, cap:{ko:"포스터",en:"Poster"}},
+];
+function tplById(id){ return TEMPLATES.find(t=>t.id===id); }
+
+/* ---------- lesson 1: what is a template (blank vs designed) ---------- */
+function renderChoose(done){
+  stage.innerHTML=`<div class="canva"><div class="cvmain" style="display:flex;align-items:center;justify-content:center;">
+    <div class="pickrow">
+      <div class="pickitem">
+        <div class="pagecard blank" data-k="blank"><span class="bl">${T({ko:"( 빈 페이지 )",en:"( blank page )"})}</span></div>
+        <div class="picklabel">${T({ko:"빈 페이지",en:"Blank page"})}</div>
+      </div>
+      <div class="pickitem">
+        <div class="pagecard" data-k="tpl" style="background:linear-gradient(150deg,#f472b6,#a855f7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;">
+          <div style="font-size:38px;">🎂</div>
+          <div style="font-size:19px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.25);">${T({ko:"생일 축하해",en:"Happy Birthday"})}</div>
+          <div style="font-size:12px;opacity:.9;">${T({ko:"이름을 여기에",en:"Your name here"})}</div>
+        </div>
+        <div class="picklabel">${T({ko:"템플릿",en:"Template"})}</div>
+      </div>
+    </div></div></div>`;
+  const frame=stage.querySelector(".canva");
+  stage.querySelectorAll(".pagecard").forEach(c=>c.addEventListener("click",()=>{
+    if(c.dataset.k==="tpl"){ clearFocus(); chime(); once(done,"🎨",{ko:"맞아요! 이미 예쁘게 꾸며진 게 템플릿이에요 🎉",en:"Yes! The one that's already decorated is a template 🎉"}); }
+    else{ beep(240,.14); c.classList.add("shakeX"); setTimeout(()=>c.classList.remove("shakeX"),320);
+      toast(frame,{ko:"이건 아무것도 없는 빈 페이지예요. 템플릿은 이미 꾸며져 있어요!",en:"That's an empty blank page. A template is already decorated!"}); }
+  }));
+  focusSel('.pagecard[data-k="tpl"]');
+}
+
+/* ---------- lesson 2: open the Templates tab ---------- */
+const NAVS=[
+  {id:"create",ic:"➕",label:{ko:"만들기",en:"Create"}},
+  {id:"home",ic:"🏠",label:{ko:"홈",en:"Home"}},
+  {id:"templates",ic:"🔲",label:{ko:"템플릿",en:"Templates"}},
+  {id:"projects",ic:"📁",label:{ko:"프로젝트",en:"Projects"}},
+];
+function renderNav(done){
+  stage.innerHTML=`<div class="canva">
+    <aside class="cvside"><div class="cvlogo">Canva</div>
+      ${NAVS.map(n=>`<button class="cvnav ${n.id==='home'?'on':''}" data-nav="${n.id}"><span class="ic">${n.ic}</span>${T(n.label)}</button>`).join("")}
+    </aside>
+    <main class="cvmain">
+      <div class="cvtop"><div class="cvtitle">${T({ko:"무엇을 디자인할까요?",en:"What will you design?"})}</div>
+        <div class="cvsearch">🔍 ${T({ko:"검색",en:"Search"})}</div></div>
+      <div style="color:#9ca3af;font-size:15px;padding:30px 4px;text-align:center;">${T({ko:"왼쪽에서 🔲 템플릿을 눌러 보세요.",en:"Tap 🔲 Templates on the left."})}</div>
+    </main></div>`;
+  const frame=stage.querySelector(".canva");
+  stage.querySelectorAll(".cvnav").forEach(b=>b.addEventListener("click",()=>{
+    clickSnd(); const id=b.dataset.nav;
+    if(id==="templates"){ clearFocus(); chime(); once(done,"🔲",{ko:"템플릿 창을 열었어요! 여기서 골라요 🎉",en:"You opened Templates! Pick one here 🎉"}); }
+    else{ b.classList.add("shakeX"); setTimeout(()=>b.classList.remove("shakeX"),320);
+      toast(frame,{ko:"🔲 템플릿을 눌러 주세요.",en:"Please tap 🔲 Templates."}); }
+  }));
+  focusSel('.cvnav[data-nav="templates"]');
+}
+
+/* ---------- lesson 3: pick a template + Use this template ---------- */
+function renderGallery(done){
+  stage.innerHTML=`<div class="canva">
+    <aside class="cvside"><div class="cvlogo">Canva</div>
+      ${NAVS.map(n=>`<button class="cvnav ${n.id==='templates'?'on':''}"><span class="ic">${n.ic}</span>${T(n.label)}</button>`).join("")}
+    </aside>
+    <main class="cvmain">
+      <div class="cvtop"><div class="cvtitle">${T({ko:"템플릿",en:"Templates"})}</div>
+        <div class="cvsearch">🔍 ${T({ko:"검색",en:"Search"})}</div></div>
+      <div class="cvgrid">
+        ${TEMPLATES.map(t=>`<div class="tpl" data-id="${t.id}">
+          <div class="tplthumb" style="background:linear-gradient(150deg,${t.g1},${t.g2})">
+            <span class="big-emoji">${t.emoji}</span><span class="tl">${T(t.tl)}</span><span class="ts">${T(t.ts)}</span></div>
+          <div class="tplcap">${T(t.cap)}</div></div>`).join("")}
+      </div>
+    </main></div>`;
+  const frame=stage.querySelector(".canva");
+  function openPreview(t){
+    clearFocus(); clickSnd();
+    const modal=document.createElement("div"); modal.className="tprev";
+    modal.innerHTML=`<div class="tprevBox">
+      <div class="tprevBig" style="background:linear-gradient(150deg,${t.g1},${t.g2})">
+        <span class="big-emoji">${t.emoji}</span><span class="tl">${T(t.tl)}</span></div>
+      <div class="tprevBody">
+        <div class="tprevName">${T(t.cap)}</div>
+        <button class="useBtn">${T({ko:"이 템플릿 사용하기",en:"Use this template"})}</button>
+        <div><button class="tprevClose">${T({ko:"닫기",en:"Close"})}</button></div>
+      </div></div>`;
+    frame.appendChild(modal);
+    modal.querySelector(".useBtn").addEventListener("click",()=>{ chime(); once(done,"✅",{ko:"템플릿을 골랐어요! 이제 내 것으로 바꿔요 🎉",en:"Template chosen! Now let's make it yours 🎉"}); });
+    modal.querySelector(".tprevClose").addEventListener("click",()=>{ clickSnd(); modal.remove(); focusSel('.tpl[data-id="bday"]'); });
+    requestAnimationFrame(()=>focusEl(modal.querySelector(".useBtn")));
+  }
+  stage.querySelectorAll(".tpl").forEach(c=>c.addEventListener("click",()=>openPreview(tplById(c.dataset.id))));
+  focusSel('.tpl[data-id="bday"]');
+}
+
+/* ---------- editor (lessons 4 & 5) ---------- */
+function editorFrame(){
+  return `<div class="editor">
+    <div class="edbar"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span>
+      <span class="dot" style="background:#34d399"></span><span class="cvlogo">Canva</span>
+      <span style="margin-left:auto;font-size:13px;color:#9ca3af;font-weight:700;">${T({ko:"생일 카드",en:"Birthday card"})}</span></div>
+    <div class="edstage"><div class="edpage" style="background:linear-gradient(150deg,#f472b6,#a855f7)">
+      <div class="edel edtxt deco" data-el="deco" style="top:20px;">${T({ko:"생일 축하해",en:"Happy Birthday"})}</div>
+      <div class="edel edphoto" data-el="photo" style="left:85px;top:70px;width:60px;height:60px;">🖼️</div>
+      <div class="edel edtxt name" data-el="name" style="top:160px;" data-empty="1">${T({ko:"이름을 여기에",en:"Your name here"})}</div>
+      <div class="edel edtxt deco" data-el="msg" style="top:230px;font-size:13px;opacity:.9;">${T({ko:"— 사랑을 담아",en:"— with love"})}</div>
+    </div></div></div>`;
+}
+function selectEl(page,el){
+  page.querySelectorAll(".selbox").forEach(s=>s.remove());
+  const box=document.createElement("div"); box.className="selbox";
+  box.style.left=el.offsetLeft+"px"; box.style.top=el.offsetTop+"px";
+  box.style.width=el.offsetWidth+"px"; box.style.height=el.offsetHeight+"px";
+  box.innerHTML=`<span class="hd tl"></span><span class="hd tr"></span><span class="hd bl"></span><span class="hd br"></span>`;
+  page.appendChild(box);
+}
+
+/* lesson 4: edit the placeholder text */
+function renderEditText(done){
+  stage.innerHTML=editorFrame();
+  const frame=stage.querySelector(".editor"), page=stage.querySelector(".edpage");
+  const nameEl=stage.querySelector('[data-el="name"]');
+  function openPopup(){
+    clearFocus(); clickSnd(); selectEl(page,nameEl);
+    if(frame.querySelector(".edpop")) return;
+    const pop=document.createElement("div"); pop.className="edpop";
+    const chips=(LANG==="ko"?["엄마","우리 딸","할머니"]:["Mom","My dear","Grandma"]);
+    pop.innerHTML=`<div class="lab">${T({ko:"이름을 적어 보세요",en:"Type a name"})}</div>
+      <input type="text" placeholder="${T({ko:'예: 엄마',en:'e.g. Mom'})}" />
+      <div class="chips">${chips.map(c=>`<button class="chip">${c}</button>`).join("")}</div>
+      <button class="apply">${T({ko:"바꾸기 ✓",en:"Apply ✓"})}</button>`;
+    frame.appendChild(pop);
+    const input=pop.querySelector("input");
+    pop.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{ input.value=ch.textContent; input.focus(); }));
+    pop.querySelector(".apply").addEventListener("click",()=>{
+      const v=(input.value||"").trim();
+      if(!v){ input.focus(); toast(frame,{ko:"이름을 먼저 적어 주세요 🙂",en:"Type a name first 🙂"}); return; }
+      nameEl.textContent=v; nameEl.dataset.empty="0";
+      page.querySelectorAll(".selbox").forEach(s=>s.remove()); pop.remove();
+      chime(); once(done,"✏️",{ko:"글자를 바꿨어요! 디자인은 그대로, 내용만 내 것으로 🎉",en:"You changed the text! Same design, your own words 🎉"});
+    });
+    requestAnimationFrame(()=>focusEl(pop.querySelector(".apply")));
+    setTimeout(()=>input.focus(),50);
+  }
+  nameEl.addEventListener("click",openPopup);
+  focusSel('[data-el="name"]');
+}
+
+/* lesson 5: replace the photo */
+function renderEditPhoto(done){
+  stage.innerHTML=editorFrame();
+  const frame=stage.querySelector(".editor"), page=stage.querySelector(".edpage");
+  const nameEl=stage.querySelector('[data-el="name"]');
+  nameEl.textContent=(LANG==="ko"?"엄마":"Mom"); nameEl.dataset.empty="0";
+  const photoEl=stage.querySelector('[data-el="photo"]');
+  function openPicker(){
+    clearFocus(); clickSnd(); selectEl(page,photoEl);
+    if(frame.querySelector(".edpop")) return;
+    const pics=["👵","🌷","🎈","🐶"];
+    const pop=document.createElement("div"); pop.className="edpop";
+    pop.innerHTML=`<div class="lab">${T({ko:"넣을 사진을 골라요",en:"Pick a photo"})}</div>
+      <div class="photopick">${pics.map(p=>`<button class="pp">${p}</button>`).join("")}</div>`;
+    frame.appendChild(pop);
+    pop.querySelectorAll(".pp").forEach(b=>b.addEventListener("click",()=>{
+      photoEl.textContent=b.textContent; photoEl.style.background="#fff"; photoEl.style.borderStyle="solid";
+      page.querySelectorAll(".selbox").forEach(s=>s.remove()); pop.remove();
+      chime(); once(done,"🖼️",{ko:"사진을 바꿨어요! 이제 완전히 내 카드예요 🎉",en:"Photo swapped! Now it's truly your card 🎉"});
+    }));
+    requestAnimationFrame(()=>focusEl(pop.querySelector(".pp")));
+  }
+  photoEl.addEventListener("click",openPicker);
+  focusSel('[data-el="photo"]');
+}
+
+/* ---------- lessons ---------- */
+const LESSONS=[
+  { title:{ko:"① 템플릿이 뭐예요?",en:"① What is a template?"},
+    instr:{ko:"둘 중 <b>템플릿</b>을 눌러 보세요. 템플릿은 누군가 <b>미리 예쁘게 만들어 둔</b> 디자인이에요.",en:"Tap the <b>template</b>. A template is a design someone <b>already made beautiful</b> for you."},
+    hint:{ko:"빈 페이지는 아무것도 없어요. 템플릿은 색·그림·글자가 이미 들어 있어요.",en:"A blank page is empty. A template already has colors, art, and text."},
+    render:renderChoose },
+  { title:{ko:"② 템플릿 창 열기",en:"② Open Templates"},
+    instr:{ko:"캔바 왼쪽 메뉴에서 <b>🔲 템플릿</b>을 눌러 템플릿 모음을 여세요.",en:"In Canva's left menu, tap <b>🔲 Templates</b> to open the gallery."},
+    hint:{ko:"여기에 카드·포스터·초대장 등 수많은 템플릿이 준비돼 있어요.",en:"Here you'll find cards, posters, invitations — lots of ready templates."},
+    render:renderNav },
+  { title:{ko:"③ 템플릿 고르기",en:"③ Pick a template"},
+    instr:{ko:"마음에 드는 걸 눌러 미리 보고, <b>‘이 템플릿 사용하기’</b>를 누르세요.",en:"Tap one to preview it, then press <b>‘Use this template’</b>."},
+    hint:{ko:"한 번 누르면 크게 미리보기가 떠요. 사용하기를 누르면 편집이 시작돼요.",en:"One tap shows a big preview. ‘Use’ opens it for editing."},
+    render:renderGallery },
+  { title:{ko:"④ 글자 바꾸기",en:"④ Change the text"},
+    instr:{ko:"‘이름을 여기에’ 글자를 눌러 선택하고, <b>내 이름</b>으로 바꿔 보세요.",en:"Tap the ‘Your name here’ text to select it, then change it to <b>your name</b>."},
+    hint:{ko:"글자를 누르면 파란 선택 상자가 생겨요. 그 안의 내용만 바꾸면 돼요.",en:"Tapping shows a blue selection box. You only change what's inside."},
+    render:renderEditText },
+  { title:{ko:"⑤ 사진 바꾸기",en:"⑤ Change the photo"},
+    instr:{ko:"🖼️ 사진 자리를 눌러 선택하고, 넣고 싶은 <b>사진</b>을 골라 바꿔 보세요.",en:"Tap the 🖼️ photo spot to select it, then pick a <b>photo</b> to swap in."},
+    hint:{ko:"템플릿의 사진도 내 사진으로 바꿀 수 있어요 — 자리는 그대로예요!",en:"You can swap the template's photo for yours — the spot stays the same!"},
+    render:renderEditPhoto },
+];
+
+/* ---------- intro ---------- */
+const INTRO=[
+  { art:"📄", title:{ko:"빈 종이는 무서워요",en:"A blank page is scary"},
+    html:{ko:`카드나 포스터를 만들려는데 화면에 <b>텅 빈 하얀 종이</b>만 있으면 막막하죠. 무엇을, 어디에 놓아야 할지 모르겠어요. 😵`,
+    en:`When you want to make a card or poster but the screen is just a <b>blank white page</b>, it feels overwhelming. Where does anything go? 😵`} },
+  { art:"🎨", title:{ko:"그래서 템플릿이 있어요",en:"That's why templates exist"},
+    html:{ko:`<div class="scene"><span>📄</span><span class="arw">→</span><span>🎨</span></div>
+    <b>템플릿</b>은 디자이너가 <b>미리 예쁘게 만들어 둔</b> 디자인이에요. 색·그림·글자 자리가 이미 다 있어요.<br><br>
+    엄마는 <b>글자와 사진만</b> 내 것으로 바꾸면 돼요. 처음부터 만들 필요가 없어요!`,
+    en:`<div class="scene"><span>📄</span><span class="arw">→</span><span>🎨</span></div>
+    A <b>template</b> is a design a designer <b>already made beautiful</b>. The colors, art, and text spots are all there.<br><br>
+    You just swap in <b>your own words and photo</b>. No need to start from scratch!`} },
+  { art:"✨", title:{ko:"우리가 할 일",en:"What we'll do"},
+    html:{ko:`① 템플릿이 뭔지 알아보고<br>② <b>템플릿</b> 창을 열고<br>③ 마음에 드는 걸 <b>골라서</b><br>④ <b>글자</b>와 ⑤ <b>사진</b>을 내 것으로 바꾸기!<br><br>
+    같이 예쁜 생일 카드를 만들어 봐요 😊`,
+    en:`① Learn what a template is<br>② Open the <b>Templates</b> tab<br>③ <b>Pick</b> one you like<br>④ Change the <b>text</b> and ⑤ the <b>photo</b>!<br><br>
+    Let's make a pretty birthday card together 😊`} },
+];
+
+/* ---------- engine ---------- */
+let lidx=0, introIdx=0, phase="intro";
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:templates","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>내보내기와 파일 크기 · Exporting & File Size</title>
+<style>
+  :root{--accent:#0ea5a3;--accent2:#6366f1;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--soft:#6b7280;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:linear-gradient(160deg,#ecfeff,#eef2ff);color:#1f2937;-webkit-font-smoothing:antialiased;}
+  #app{max-width:820px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:12px 14px 24px;}
+  header{position:relative;text-align:center;}
+  #langToggle{position:absolute;top:0;right:0;display:flex;gap:4px;}
+  #langToggle button{font-size:14px;font-weight:700;border:1px solid #99f6e4;background:#fff;color:#0ea5a3;border-radius:999px;padding:5px 11px;cursor:pointer;}
+  #langToggle button.on{background:#0ea5a3;color:#fff;}
+  #homeBtn{position:absolute;top:0;left:0;text-decoration:none;font-size:15px;font-weight:700;color:#0ea5a3;background:#ecfeff;border:1px solid #99f6e4;border-radius:999px;padding:6px 12px;}
+  h1{font-size:23px;margin:6px 0 2px;}
+  .sub{font-size:15px;color:var(--soft);margin:0 0 8px;}
+  #progressWrap{height:9px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px auto 4px;max-width:520px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
+  #stepText{font-size:13px;color:var(--soft);margin-bottom:8px;}
+  #card{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;}
+  .ghostBtn{position:absolute;top:-2px;right:0;font-size:13px;color:#9ca3af;background:none;border:none;cursor:pointer;z-index:5;}
+
+  /* intro */
+  #introView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;
+    background:#fff;border-radius:18px;padding:26px 22px;box-shadow:0 12px 30px rgba(14,165,163,.14);}
+  #introArt{font-size:70px;}
+  #introTitle{font-size:24px;font-weight:800;}
+  #introText{font-size:17px;line-height:1.7;max-width:580px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;font-size:30px;}
+  .scene .arw{color:#9ca3af;font-size:24px;}
+  .introBtns{display:flex;gap:12px;margin-top:6px;}
+  .big{font-size:17px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(14,165,163,.3);}
+  .big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);box-shadow:none;}
+
+  /* main */
+  #mainView{flex:1;display:flex;flex-direction:column;min-height:0;}
+  #banner{background:#fff;border-radius:14px;padding:11px 15px;box-shadow:0 8px 20px rgba(14,165,163,.10);margin-bottom:10px;}
+  #banner .t{font-size:18px;font-weight:800;color:var(--accent);}
+  #banner .i{font-size:16px;margin-top:3px;line-height:1.5;}
+  #banner .i b{color:var(--accent2);}
+  #banner .hint{font-size:14px;color:var(--soft);margin-top:4px;}
+  #stage{position:relative;flex:1;min-height:0;display:flex;}
+
+  .panel{position:relative;flex:1;display:flex;flex-direction:column;min-height:340px;background:#eef0f4;border:1px solid #e5e7eb;
+    border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(14,165,163,.12);}
+  .edbar{height:38px;flex:none;background:#fff;border-bottom:1px solid #e8e8ef;display:flex;align-items:center;gap:8px;padding:0 12px;}
+  .edbar .dot{width:11px;height:11px;border-radius:50%;}
+  .cvlogo{font-family:"Brush Script MT","Segoe Script",cursive;font-size:18px;font-weight:800;
+    background:linear-gradient(90deg,#00c4cc,#7c3aed,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .shareBtn{margin-left:auto;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:7px 14px;cursor:pointer;box-shadow:0 3px 8px rgba(14,165,163,.3);}
+  .edstage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;position:relative;}
+  .cardArt{width:180px;height:230px;border-radius:10px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.2);
+    background:linear-gradient(150deg,#f472b6,#a855f7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;padding:14px;}
+  .cardArt .ce{font-size:44px;}
+  .cardArt .ct{font-size:20px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .cardArt .cs2{font-size:13px;opacity:.9;}
+
+  /* export sheet */
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e5e7eb;border-radius:16px 16px 0 0;
+    box-shadow:0 -10px 30px rgba(0,0,0,.14);padding:16px 18px 18px;z-index:20;animation:sheetUp .22s ease;}
+  @keyframes sheetUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet h3{margin:0 0 12px;font-size:17px;font-weight:900;color:#1f2937;display:flex;align-items:center;gap:7px;}
+  .sheet .row{margin-bottom:12px;}
+  .sheet .lab{font-size:13px;font-weight:800;color:#6b7280;margin-bottom:6px;}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;font-size:15px;font-weight:800;border:2px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:10px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .seg button .sm{font-size:11px;font-weight:700;color:#9ca3af;}
+  .seg button.on{border-color:var(--accent);background:#ecfeff;color:#0e7490;}
+  .seg button.on .sm{color:#0e7490;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;
+    border:3px solid var(--accent);box-shadow:0 3px 8px rgba(0,0,0,.2);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer;}
+  .sizeReadout{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:15px;font-weight:900;}
+  .sizeReadout .num{font-size:20px;}
+  .sizeReadout .num.big{color:var(--bad);} .sizeReadout .num.ok{color:var(--good);}
+  .dlBtn{width:100%;font-size:16px;font-weight:900;color:#fff;border:none;border-radius:999px;padding:13px;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));box-shadow:0 6px 16px rgba(14,165,163,.32);}
+  .dlBtn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+
+  /* upload box */
+  .uparea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
+  .upbox{width:min(360px,90%);border:2px dashed #cbd5e1;border-radius:16px;background:#fff;padding:18px;text-align:center;}
+  .upsite{font-size:14px;font-weight:800;color:#334155;margin-bottom:4px;}
+  .uplimit{font-size:13px;color:#94a3b8;margin-bottom:12px;}
+  .upfile{display:flex;align-items:center;gap:10px;justify-content:center;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;margin-bottom:10px;}
+  .upfile .fi{font-size:26px;} .upfile .fn{font-weight:800;color:#1f2937;font-size:14px;}
+  .upfile .fs{font-weight:900;font-size:15px;} .upfile .fs.big{color:var(--bad);} .upfile .fs.ok{color:var(--good);}
+  .upctrl{width:min(360px,90%);background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;}
+
+  .toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#fff1f2;border:2px solid #fecdd3;
+    color:#be123c;font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.14);
+    z-index:30;animation:toastIn .2s ease;text-align:center;max-width:88%;}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes shakeX{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .shakeX{animation:shakeX .3s ease;}
+
+  .focusRing{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
+    border:3px solid var(--accent2);background:rgba(99,102,241,.12);pointer-events:none;z-index:25;
+    animation:focusPulse 1.4s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.45);transform:scale(1);}
+    50%{box-shadow:0 0 0 12px rgba(99,102,241,0);transform:scale(1.12);}}
+
+  #successOverlay{position:absolute;left:8px;right:8px;bottom:8px;background:#f2fdf6;border:2px solid var(--good);
+    box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:40;padding:12px 14px;}
+  #successOverlay .be{font-size:38px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(14,165,163,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:96px;animation:pop .6s ease;}
+  #hubLink{display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#0ea5a3;background:#ecfeff;border:1px solid #99f6e4;border-radius:999px;padding:10px 18px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">📤</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="hint" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()" style="margin-top:14px;"></button>
+      <div><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"내보내기와 파일 크기",en:"Exporting & File Size"},
+  h1:{ko:"📤 내보내기와 파일 크기 <span style='font-size:14px;color:#6b7280;'>(형식·용량)</span>",en:"📤 Exporting & File Size <span style='font-size:14px;color:#6b7280;'>(formats & size)</span>"},
+  sub:{ko:"파일로 저장 · 형식 고르기 · 용량 줄이기",en:"Save as a file · pick a format · shrink the size"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  prev:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  start:{ko:"시작하기 ▶",en:"Start ▶"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  home:{ko:"🏠 교실",en:"🏠 Classroom"},
+  finalTitle:{ko:"내보내기 마스터!",en:"Exporting master!"},
+  finalMsg:{ko:"이제 엄마는 디자인을 <b>파일로 내보낼</b> 수 있어요!<br>웹에는 <b>PNG</b>(또렷한 그림·글자)와 <b>JPG</b>(사진, 더 작음)를 써요 — 어디서나 열리고 가벼우니까요.<br>파일이 너무 크면 사이트가 거절해요. <b>JPG로 바꾸거나 품질을 낮춰</b> 용량을 줄이면 돼요 💖",en:"Now you can <b>export</b> your design to a file!<br>The web uses <b>PNG</b> (crisp graphics & text) and <b>JPG</b> (photos, smaller) — they open everywhere and stay light.<br>If a file is too big, sites reject it. Just <b>switch to JPG or lower the quality</b> to shrink it 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").innerHTML=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  els.skip.textContent=T(UI.skip); els.introBack.textContent=T(UI.prev);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.querySelector("#homeBtn .ko").textContent=T(UI.home);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else if(!doneGuard) loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.12){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊"];for(let i=0;i<24;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- shared helpers ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+function once(done,emoji,msg){ if(doneGuard) return; done(emoji,msg); }
+function clearFocus(){ const r=stage.querySelector(".focusRing"); if(r) r.remove(); }
+function focusEl(el){
+  clearFocus(); if(!el) return;
+  const er=el.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  const ring=document.createElement("div"); ring.className="focusRing";
+  ring.style.left=(er.left+er.width/2-sr.left)+"px"; ring.style.top=(er.top+er.height/2-sr.top)+"px";
+  stage.appendChild(ring);
+}
+function focusSel(sel){ requestAnimationFrame(()=>focusEl(stage.querySelector(sel))); }
+function toast(host,msg){
+  const t=document.createElement("div"); t.className="toast"; t.textContent=T(msg);
+  host.appendChild(t); setTimeout(()=>t.remove(),1900);
+}
+function cardArtHTML(){
+  return `<div class="cardArt"><div class="ce">🎂</div><div class="ct">${T({ko:"생일 축하해",en:"Happy Birthday"})}</div><div class="cs2">${T({ko:"엄마에게 💕",en:"For Mom 💕"})}</div></div>`;
+}
+function editorTop(withShare){
+  return `<div class="edbar"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span>
+    <span class="dot" style="background:#34d399"></span><span class="cvlogo">Canva</span>
+    ${withShare?`<button class="shareBtn">⬇ ${T({ko:"공유·다운로드",en:"Share · Download"})}</button>`:""}</div>`;
+}
+
+/* ---------- L1: what is exporting ---------- */
+function renderExportStart(done){
+  stage.innerHTML=`<div class="panel">${editorTop(true)}<div class="edstage">${cardArtHTML()}</div></div>`;
+  const panel=stage.querySelector(".panel"), edstage=stage.querySelector(".edstage");
+  stage.querySelector(".shareBtn").addEventListener("click",()=>{
+    clearFocus(); clickSnd();
+    const sheet=document.createElement("div"); sheet.className="sheet";
+    sheet.innerHTML=`<h3>📤 ${T({ko:"내보내기 (다운로드)",en:"Export (Download)"})}</h3>
+      <p style="font-size:14px;color:#4b5563;margin:0 0 12px;line-height:1.5;">${T({ko:"이 디자인을 하나의 <b>그림 파일</b>로 만들어 컴퓨터에 저장해요. 그래야 다른 곳에 보내거나 올릴 수 있어요.",en:"Turn this design into one <b>image file</b> saved on your computer. Then you can send or upload it anywhere."})}</p>
+      <button class="dlBtn">⬇ ${T({ko:"다운로드",en:"Download"})}</button>`;
+    panel.appendChild(sheet);
+    sheet.querySelector(".dlBtn").addEventListener("click",()=>{ chime();
+      once(done,"📁",{ko:"내보내기 완료! 디자인이 파일로 저장됐어요 🎉",en:"Exported! Your design is saved as a file 🎉"}); });
+    requestAnimationFrame(()=>focusEl(sheet.querySelector(".dlBtn")));
+  });
+  focusSel(".shareBtn");
+}
+
+/* ---------- L2: choose a format (png vs jpg) ---------- */
+function renderChooseFormat(done){
+  stage.innerHTML=`<div class="panel">${editorTop(false)}
+    <div class="edstage">${cardArtHTML()}
+      <div class="sheet">
+        <h3>📤 ${T({ko:"파일 형식 고르기",en:"Choose a file type"})}</h3>
+        <div class="row"><div class="seg">
+          <button data-f="png"><span>PNG</span><span class="sm">${T({ko:"또렷 · 큼",en:"crisp · bigger"})}</span></button>
+          <button data-f="jpg"><span>JPG</span><span class="sm">${T({ko:"사진 · 작음",en:"photos · smaller"})}</span></button>
+        </div></div>
+        <button class="dlBtn" disabled>⬇ ${T({ko:"다운로드",en:"Download"})}</button>
+      </div></div></div>`;
+  const panel=stage.querySelector(".panel");
+  stage.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+    const f=b.dataset.f; clickSnd();
+    if(f==="jpg"){ clearFocus(); stage.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));
+      chime(); once(done,"🗜️",{ko:"맞아요! 사진처럼 용량을 줄이려면 JPG가 좋아요 🎉",en:"Right! For photos and smaller size, JPG is the pick 🎉"}); }
+    else{ b.classList.add("shakeX"); setTimeout(()=>b.classList.remove("shakeX"),320);
+      toast(panel,{ko:"PNG도 웹에서 잘 열려요. 하지만 사진은 JPG가 더 작아요 — JPG를 골라요!",en:"PNG works on the web too, but photos are smaller as JPG — pick JPG!"}); }
+  }));
+  focusSel('.seg button[data-f="jpg"]');
+}
+
+/* ---------- L3: quality slider changes file size ---------- */
+function renderQuality(done){
+  stage.innerHTML=`<div class="panel">${editorTop(false)}
+    <div class="edstage">${cardArtHTML()}
+      <div class="sheet">
+        <h3>📤 ${T({ko:"파일 크기 줄이기 (JPG)",en:"Shrink the file (JPG)"})}</h3>
+        <div class="row"><div class="lab">${T({ko:"품질",en:"Quality"})}</div>
+          <input type="range" min="0" max="100" value="100">
+          <div class="sizeReadout"><span>${T({ko:"파일 크기",en:"File size"})}</span><span class="num big"><span class="mb">7.0</span> MB</span></div>
+        </div>
+      </div></div></div>`;
+  const rng=stage.querySelector("input"), mb=stage.querySelector(".mb"), num=stage.querySelector(".num");
+  function size(){ return (0.6 + (+rng.value)/100*6.4); }
+  function upd(){ const s=size(); mb.textContent=s.toFixed(1);
+    const small=s<=2.0; num.className="num "+(small?"ok":"big"); }
+  rng.addEventListener("input",()=>{ clearFocus(); upd(); });
+  rng.addEventListener("change",()=>{ if(size()<=2.0){ chime();
+    once(done,"🗜️",{ko:"품질을 낮추니 파일이 훨씬 작아졌어요! 🎉",en:"Lower quality made the file much smaller! 🎉"}); }});
+  upd(); focusSel("input");
+}
+
+/* ---------- L4: too big to upload — shrink it ---------- */
+function renderUpload(done){
+  const LIMIT=25;
+  stage.innerHTML=`<div class="panel">
+    <div class="uparea">
+      <div class="upbox">
+        <div class="upsite">🌐 ${T({ko:"사진 올리기",en:"Upload a photo"})}</div>
+        <div class="uplimit">${T({ko:"최대 25MB까지 올릴 수 있어요",en:"You can upload up to 25MB"})}</div>
+        <div class="upfile"><span class="fi">🖼️</span><span class="fn">my-card.<span class="ext">png</span></span><span class="fs big"><span class="mb">45.6</span> MB</span></div>
+        <button class="dlBtn" disabled>⬆ ${T({ko:"업로드",en:"Upload"})}</button>
+      </div>
+      <div class="upctrl">
+        <div class="lab" style="font-size:13px;font-weight:800;color:#6b7280;margin-bottom:6px;">${T({ko:"형식",en:"Format"})}</div>
+        <div class="seg" style="margin-bottom:10px;">
+          <button data-f="png" class="on"><span>PNG</span><span class="sm">${T({ko:"큼",en:"bigger"})}</span></button>
+          <button data-f="jpg"><span>JPG</span><span class="sm">${T({ko:"작음",en:"smaller"})}</span></button>
+        </div>
+        <div class="lab" style="font-size:13px;font-weight:800;color:#6b7280;margin-bottom:6px;">${T({ko:"품질",en:"Quality"})}</div>
+        <input type="range" min="0" max="100" value="100">
+      </div>
+    </div></div>`;
+  const panel=stage.querySelector(".panel");
+  let fmt="png"; const rng=stage.querySelector("input"), mb=stage.querySelector(".mb"), fs=stage.querySelector(".fs"),
+    ext=stage.querySelector(".ext"), up=stage.querySelector(".dlBtn");
+  function size(){ const base=fmt==="png"?12:5; return base*(0.5+(+rng.value)/100*0.5)*3.8; }
+  function upd(){ const s=size(), ok=s<=LIMIT; mb.textContent=s.toFixed(1); ext.textContent=fmt;
+    fs.className="fs "+(ok?"ok":"big"); up.disabled=!ok; }
+  stage.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+    fmt=b.dataset.f; clickSnd(); stage.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b)); upd();
+  }));
+  rng.addEventListener("input",upd);
+  up.addEventListener("click",()=>{ if(up.disabled){ return; } clearFocus(); chime();
+    once(done,"⬆",{ko:"업로드 성공! 파일을 25MB 아래로 줄였어요 🎉",en:"Uploaded! You shrank it under 25MB 🎉"}); });
+  up.addEventListener("mousedown",()=>{ if(up.disabled) toast(panel,{ko:"아직 너무 커요! 25MB 이하로 줄여 주세요.",en:"Still too big! Get it under 25MB."}); });
+  upd(); focusSel('.seg button[data-f="jpg"]');
+}
+
+/* ---------- lessons ---------- */
+const LESSONS=[
+  { title:{ko:"① 내보내기가 뭐예요?",en:"① What is exporting?"},
+    instr:{ko:"오른쪽 위 <b>⬇ 공유·다운로드</b>를 누르고, <b>다운로드</b>를 눌러 디자인을 파일로 저장하세요.",en:"Tap <b>⬇ Share · Download</b> at the top right, then <b>Download</b> to save your design as a file."},
+    hint:{ko:"디자인은 캔바 안에만 있어요. ‘내보내기’로 그림 파일을 만들어야 밖으로 보낼 수 있어요.",en:"Your design lives inside Canva. ‘Exporting’ makes an image file you can share out."},
+    render:renderExportStart },
+  { title:{ko:"② 어떤 형식으로?",en:"② Which format?"},
+    instr:{ko:"이 카드를 웹에 올릴 거예요. 파일을 더 <b>작게</b> 하려면 어떤 형식이 좋을까요?",en:"You'll put this card on the web. Which format keeps the file <b>smaller</b>?"},
+    hint:{ko:"PNG는 또렷한 글자·로고·투명 배경에 좋고, JPG는 사진에 좋고 용량이 작아요.",en:"PNG is best for crisp text, logos, transparency; JPG is best for photos and is smaller."},
+    render:renderChooseFormat },
+  { title:{ko:"③ 파일 크기 줄이기",en:"③ Make the file smaller"},
+    instr:{ko:"<b>품질</b> 손잡이를 내려서 파일 크기를 <b>2MB 이하</b>로 줄여 보세요.",en:"Slide <b>Quality</b> down to shrink the file to <b>2MB or less</b>."},
+    hint:{ko:"품질을 조금 낮춰도 눈으로는 거의 똑같아요. 대신 용량이 확 줄어요.",en:"A little less quality looks almost the same, but the size drops a lot."},
+    render:renderQuality },
+  { title:{ko:"④ 너무 크면 못 올려요",en:"④ Too big to upload"},
+    instr:{ko:"이 사진은 <b>45.6MB</b>라 사이트가 거절해요. <b>JPG로 바꾸거나 품질을 낮춰</b> 25MB 이하로 만든 뒤 <b>업로드</b>하세요.",en:"This file is <b>45.6MB</b>, too big for the site. <b>Switch to JPG or lower quality</b> to get under 25MB, then <b>Upload</b>."},
+    hint:{ko:"유튜브·이메일·웹사이트마다 올릴 수 있는 크기 한도가 있어요. 너무 크면 줄이면 돼요!",en:"YouTube, email, and websites each have size limits. If it's too big, just shrink it!"},
+    render:renderUpload },
+];
+
+/* ---------- intro ---------- */
+const INTRO=[
+  { art:"📤", title:{ko:"만든 걸 밖으로 꺼내기",en:"Getting your work out"},
+    html:{ko:`캔바나 포토샵에서 만든 디자인은 그 <b>프로그램 안</b>에만 있어요. 그림처럼 보내거나 인쇄하려면, 하나의 <b>파일로 내보내기</b>(다운로드)를 해야 해요.`,
+    en:`A design you make in Canva or Photoshop lives <b>inside that program</b>. To send or print it like a picture, you <b>export</b> (download) it as one <b>file</b>.`} },
+  { art:"🖼️", title:{ko:"웹은 PNG와 JPG를 좋아해요",en:"The web loves PNG & JPG"},
+    html:{ko:`<div class="scene"><span>🖼️ PNG</span><span>📷 JPG</span></div>
+    <b>PNG</b>는 글자·로고처럼 <b>또렷한</b> 그림과 투명 배경에 좋아요. <b>JPG</b>는 <b>사진</b>에 좋고 용량이 더 작아요.<br><br>둘 다 어느 기기에서나 열리고 <b>가벼워서</b>, 웹사이트·문자·이메일이 다 좋아해요.`,
+    en:`<div class="scene"><span>🖼️ PNG</span><span>📷 JPG</span></div>
+    <b>PNG</b> is great for <b>crisp</b> graphics, text, and transparency. <b>JPG</b> is great for <b>photos</b> and is smaller.<br><br>Both open on any device and are <b>light</b>, so websites, texts, and email all love them.`} },
+  { art:"⚖️", title:{ko:"파일이 너무 크면?",en:"What if a file is too big?"},
+    html:{ko:`파일에는 <b>크기(용량, MB)</b>가 있어요. 그림이 클수록·품질이 높을수록 용량이 커져요.<br><br>유튜브·이메일·웹사이트는 <b>올릴 수 있는 크기 한도</b>가 있어서, 너무 크면 <b>거절</b>해요. 그럴 땐 <b>JPG로 바꾸거나 품질을 낮춰</b> 줄이면 돼요!`,
+    en:`Every file has a <b>size (MB)</b>. Bigger images and higher quality mean a bigger file.<br><br>YouTube, email, and websites have <b>upload size limits</b>, so a too-big file gets <b>rejected</b>. Just <b>switch to JPG or lower the quality</b> to shrink it!`} },
+];
+
+/* ---------- engine ---------- */
+let lidx=0, introIdx=0, phase="intro";
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:export","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>

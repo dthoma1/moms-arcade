@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>컴퓨터 안에는 뭐가 있을까요?</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#0ea5a3; --accent2:#6366f1; --good:#22c55e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#0ea5a3;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f0fdfa;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#e4f7f4;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:none;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(14,165,163,.12);padding:26px 22px;text-align:center;}
+  #introArt{font-size:74px;line-height:1;margin-bottom:6px;animation:pop .5s ease;}
+  #introTitle{font-size:23px;font-weight:800;margin-bottom:8px;}
+  #introText{font-size:16px;color:#374151;line-height:1.6;max-width:560px;}
+  #introText b{color:var(--accent);}
+  .introBtns{display:flex;gap:12px;margin-top:20px;}
+  .introBtns button{font-size:16px;font-weight:700;border-radius:999px;padding:11px 26px;cursor:pointer;border:none;}
+  #introBack{background:#f1f5f9;color:#64748b;}
+  #introNext{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #dots{display:flex;gap:7px;margin-top:16px;}
+  #dots .d{width:9px;height:9px;border-radius:50%;background:#e5e7eb;}
+  #dots .d.on{background:var(--accent);}
+
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(14,165,163,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .hint{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,#e6f7f4,#eef0ff);display:flex;align-items:center;justify-content:center;padding:16px;}
+
+  .board{position:relative;width:min(430px,94%);aspect-ratio:4/3;border-radius:12px;
+    background:linear-gradient(135deg,#1b7a44,#0f5c31);box-shadow:0 12px 30px rgba(0,0,0,.25),inset 0 0 0 3px #0c4a28;overflow:hidden;}
+  .board .traces{position:absolute;inset:0;opacity:.22;pointer-events:none;background-image:
+    linear-gradient(90deg,transparent 48%,#8dffbe 48% 52%,transparent 52%),
+    linear-gradient(0deg,transparent 48%,#8dffbe 48% 52%,transparent 52%);background-size:40px 40px;}
+  .part{cursor:pointer;transition:filter .12s;}
+  .part:hover{filter:brightness(1.06);}
+  .part.board{position:absolute;inset:0;z-index:1;}
+  .cpu{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);width:32%;aspect-ratio:1;z-index:3;
+    border-radius:8px;background:linear-gradient(135deg,#dcdfe5,#a9adb6);box-shadow:0 4px 12px rgba(0,0,0,.45),inset 0 0 0 2px #8b8f98;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#3a3d45;letter-spacing:1px;}
+  .ram{position:absolute;right:6%;width:7.5%;height:60%;top:16%;z-index:3;border-radius:3px 3px 1px 1px;
+    background:linear-gradient(#227a42,#175a30);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 0 0 1px #0c4a28;}
+  .ram.r2{right:16%;}
+  .ram::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:9%;background:#e6c65a;border-radius:0 0 1px 1px;}
+  .drive{position:absolute;left:6%;top:8%;width:34%;height:25%;z-index:3;border-radius:4px;
+    background:linear-gradient(#3c3f47,#26282e);color:#cfd2d8;font-size:11px;font-weight:800;letter-spacing:1px;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 3px 9px rgba(0,0,0,.4);}
+  .battery{position:absolute;left:6%;bottom:7%;width:31%;height:20%;z-index:3;border-radius:6px;
+    background:linear-gradient(#2b2d33,#1a1b1f);border:2px solid #3a3d45;color:#ffd23f;font-size:15px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 3px 9px rgba(0,0,0,.4);}
+  .cap{position:absolute;width:17px;height:17px;border-radius:50%;z-index:3;
+    background:radial-gradient(circle at 40% 35%,#565962,#1c1e22);box-shadow:inset 0 0 0 2px #6b6f78,0 2px 5px rgba(0,0,0,.4);}
+  .cap.c1{right:7%;bottom:10%;} .cap.c2{right:15%;bottom:10%;}
+  .socchip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30%;aspect-ratio:1;z-index:3;
+    border-radius:9px;background:linear-gradient(135deg,#3c3f47,#1f2126);box-shadow:0 8px 20px rgba(0,0,0,.55),inset 0 0 0 2px #55585f;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e5e7eb;font-size:12px;font-weight:800;gap:2px;text-align:center;}
+  .socchip .big{font-size:26px;}
+  .board.dim{filter:saturate(.6) brightness(.9);}
+  .board.dim .traces{opacity:.12;}
+
+  .plabel{position:absolute;background:#0b3b2e;color:#fff;font-size:12px;font-weight:700;padding:5px 11px;
+    border-radius:999px;white-space:nowrap;z-index:20;box-shadow:0 6px 16px rgba(0,0,0,.3);pointer-events:none;
+    transform:translate(-50%,-50%);animation:pop .3s ease;}
+  .part.found{filter:brightness(1.14);}
+  .ringGlow{position:absolute;border:3px solid #fbbf24;border-radius:12px;pointer-events:none;z-index:15;
+    box-shadow:0 0 14px rgba(251,191,36,.7);animation:pop .3s ease;}
+
+  .focusRing{position:absolute;border:4px solid rgba(14,165,163,.95);border-radius:50%;
+    width:64px;height:64px;pointer-events:none;z-index:18;transform:translate(-50%,-50%);
+    box-shadow:0 0 0 4px rgba(14,165,163,.25);animation:focusPulse 1.15s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.95;}
+    50%{transform:translate(-50%,-50%) scale(1.28);opacity:.55;}}
+
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.94);
+    color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;z-index:35;max-width:88%;
+    box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;text-align:center;}
+
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.12);}100%{transform:scale(1);opacity:1;}}
+
+  #successOverlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.82);backdrop-filter:blur(3px);border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:22px;font-weight:800;color:var(--accent);margin-top:6px;text-align:center;padding:0 20px;}
+
+  .confetti{position:fixed;top:-24px;z-index:120;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+    padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="introView">
+      <div id="introArt"></div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button id="introBack" onclick="prevIntro()"></button>
+        <button id="introNext" onclick="nextIntro()"></button>
+      </div>
+      <div id="dots"></div>
+    </div>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="hint" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#0ea5a3;background:#e6f7f4;border:1px solid #b6ece5;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"컴퓨터 안에는 뭐가 있을까요?",en:"What's Inside Your Computer?"},
+  h1:{ko:"🔩 컴퓨터 안에는 뭐가 있을까요?",en:"🔩 What's Inside Your Computer?"},
+  sub:{ko:"컴퓨터를 열어 각 부품이 하는 일을 알아봐요. 그림에서 찾아 톡 눌러 보세요 😊",en:"Let's open the computer and learn what each part does. Find it and give it a tap 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  back:{ko:"‹ 뒤로",en:"‹ Back"}, next:{ko:"다음 ›",en:"Next ›"}, start:{ko:"시작하기 ›",en:"Let's start ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"컴퓨터 속을 다 봤어요! 🎓",en:"You've seen inside a computer! 🎓"},
+  finalMsg:{ko:"CPU·램·저장장치·배터리·메인보드, 그리고 다 합친 칩까지 — 정말 잘하셨어요 💖",en:"CPU, RAM, storage, battery, motherboard, and the all-in-one chip — wonderful work 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  hintPrefix:{ko:"💡 ",en:"💡 "}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(inIntro){ showIntro(introIdx); }
+  else if(!doneLock){ loadLevel(current); }
+}
+
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+const stage=document.getElementById("stage");
+const PARTNAME={
+  cpu:{ko:"CPU (중앙처리장치)",en:"CPU (processor)"}, ram:{ko:"램 (RAM)",en:"RAM"},
+  drive:{ko:"저장장치 (SSD)",en:"Storage (SSD)"}, battery:{ko:"배터리",en:"Battery"},
+  board:{ko:"메인보드",en:"Motherboard"}, chip:{ko:"다 합친 칩",en:"The all-in-one chip"}
+};
+const LESSONEMOJI={cpu:"🧠",ram:"🗒️",drive:"🗄️",battery:"🔋",board:"🔌",chip:"🧩"};
+function boardHTML(mode){
+  if(mode==="chip"){
+    return `<div class="board dim" id="board"><div class="traces"></div>
+      <div class="part chip socchip" data-part="chip"><span class="big">🧩</span>${T({ko:"칩 1개",en:"1 chip"})}</div>
+    </div>`;
+  }
+  return `<div class="board" id="board">
+    <div class="traces"></div>
+    <div class="part board" data-part="board"></div>
+    <div class="part drive" data-part="drive">SSD</div>
+    <div class="part ram r2" data-part="ram"></div>
+    <div class="part ram" data-part="ram"></div>
+    <div class="part cpu" data-part="cpu">CPU</div>
+    <div class="part battery" data-part="battery">🔋</div>
+    <div class="part cap c1 board" data-part="board"></div>
+    <div class="part cap c2 board" data-part="board"></div>
+  </div>`;
+}
+
+let focusTarget=null;
+function clearFocus(){ const r=stage.querySelector(".focusRing"); if(r)r.remove(); focusTarget=null; }
+function focusOn(sel){ focusTarget=sel; placeFocus(); }
+function placeFocus(){
+  const bd=document.getElementById("board"); if(!bd||!focusTarget) return;
+  const t=bd.querySelector(focusTarget); if(!t) return;
+  let r=stage.querySelector(".focusRing");
+  if(!r){ r=document.createElement("div"); r.className="focusRing"; stage.appendChild(r); }
+  const s=stage.getBoundingClientRect(), b=t.getBoundingClientRect();
+  const sz=Math.max(46,Math.min(90,Math.max(b.width,b.height)+30));
+  r.style.width=sz+"px"; r.style.height=sz+"px";
+  r.style.left=(b.left-s.left+b.width/2)+"px"; r.style.top=(b.top-s.top+b.height/2)+"px";
+}
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=T(msg); t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },2200); }
+function labelPart(el){
+  const bd=document.getElementById("board"); const lb=bd.getBoundingClientRect(), b=el.getBoundingClientRect();
+  const tag=document.createElement("div"); tag.className="plabel"; tag.textContent=T(PARTNAME[el.dataset.part]);
+  tag.style.left=(b.left-lb.left+b.width/2)+"px"; tag.style.top=(b.top-lb.top-12)+"px"; bd.appendChild(tag);
+  const g=document.createElement("div"); g.className="ringGlow";
+  g.style.left=(b.left-lb.left-4)+"px"; g.style.top=(b.top-lb.top-4)+"px";
+  g.style.width=(b.width+8)+"px"; g.style.height=(b.height+8)+"px"; bd.appendChild(g);
+}
+function renderBoard(target,mode,focus,done){
+  stage.innerHTML=boardHTML(mode);
+  focusOn(focus||(".part."+target));
+  requestAnimationFrame(placeFocus);
+  stage.querySelectorAll(".part").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation(); if(locked) return;
+      const p=el.dataset.part; clearFocus();
+      if(p===target){
+        locked=true; el.classList.add("found"); labelPart(el);
+        setTimeout(()=>done(LESSONEMOJI[target]||"✨",{ko:T(PARTNAME[target])+" 찾았어요!",en:"You found the "+T(PARTNAME[target])+"!"}),650);
+      } else {
+        beep(360,.08);
+        showToast({ko:"거긴 "+T(PARTNAME[p])+"예요. "+T(PARTNAME[target])+"를 찾아보세요 🙂",
+                   en:"That's the "+T(PARTNAME[p])+". Look for the "+T(PARTNAME[target])+" 🙂"});
+        setTimeout(()=>{ if(!locked){ focusOn(focus||(".part."+target)); placeFocus(); } },200);
+      }
+    });
+  });
+}
+
+const INTRO=[
+  { art:"🖥️", title:{ko:"안을 열어볼까요?",en:"Let's open it up"},
+    html:{ko:"컴퓨터 상자 안에는 뭐가 있을까요? 몸에 심장·뇌·위가 있듯이, 컴퓨터에도 <b>부품</b>이 있고 각자 <b>맡은 일</b>이 있어요. 하나씩 열어봐요!",
+          en:"What's inside the computer box? Just like a body has a heart, brain, and stomach, a computer has <b>parts</b>, and each has a <b>job</b>. Let's open it up, one at a time!"} },
+  { art:"✋", title:{ko:"예전엔 손에 들 수 있었어요",en:"They used to fit in your hand"},
+    html:{ko:"이 부품들은 원래 <b>손에 들 수 있는</b> 크고 <b>따로 떨어진</b> 물건이었어요. 지금은 아주 작아졌지만, 하는 일은 똑같아요. 마지막에 놀라운 걸 보여드릴게요 😊",
+          en:"These parts used to be big, <b>separate things you could hold</b> in your hand. Today they're tiny, but they do the same jobs. There's a surprise at the end 😊"} }
+];
+let inIntro=true, introIdx=0;
+function showIntro(i){
+  inIntro=true; introIdx=i;
+  els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none"; els.skip.style.display="none";
+  const s=INTRO[i];
+  document.getElementById("introArt").textContent=s.art;
+  document.getElementById("introTitle").textContent=T(s.title);
+  document.getElementById("introText").innerHTML=T(s.html);
+  document.getElementById("introBack").style.visibility=i===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=i===INTRO.length-1?T(UI.start):T(UI.next);
+  const dots=document.getElementById("dots"); dots.innerHTML="";
+  INTRO.forEach((_,k)=>{const d=document.createElement("div");d.className="d"+(k===i?" on":"");dots.appendChild(d);});
+  els.bar.style.width="0%"; els.step.textContent="";
+}
+function nextIntro(){ if(introIdx<INTRO.length-1) showIntro(introIdx+1); else startLessons(); }
+function prevIntro(){ if(introIdx>0) showIntro(introIdx-1); }
+function startLessons(){ inIntro=false; els.intro.style.display="none"; els.main.style.display="flex"; els.skip.style.display="block"; loadLevel(0); }
+
+const levels=[
+  { target:"cpu", title:{ko:"CPU · 두뇌",en:"CPU · the brain"},
+    instr:{ko:"컴퓨터의 두뇌예요. 모든 계산과 생각을 여기서 해요. 보통 가운데 큰 사각형이에요.",en:"The computer's brain. All the thinking and calculating happens here. Usually the big square in the middle."},
+    hint:{ko:"보드 가운데 큰 은색 사각형(CPU)을 눌러 보세요.",en:"Tap the big silver square (CPU) in the middle."} },
+  { target:"ram", title:{ko:"램(RAM) · 책상",en:"RAM · the desk"},
+    instr:{ko:"'단기 기억'이에요. 지금 하는 일을 잠깐 올려두는 책상 같아요. 전원을 끄면 잊어버려요.",en:"Short-term memory. Like a desk that holds what you're doing right now. It forgets when the power is off."},
+    hint:{ko:"오른쪽에 세로로 꽂힌 얇은 막대(램)를 눌러 보세요.",en:"Tap one of the thin vertical sticks on the right (RAM)."} },
+  { target:"drive", title:{ko:"저장장치 · 서랍장",en:"Storage · the cabinet"},
+    instr:{ko:"'장기 기억'이에요. 사진과 파일을 계속 보관해요. 전원을 꺼도 안 잊어버려요.",en:"Long-term memory. It keeps your photos and files. It remembers even when powered off."},
+    hint:{ko:"왼쪽 위 'SSD' 라고 쓰인 사각형을 눌러 보세요.",en:"Tap the box labeled 'SSD' at the top-left."} },
+  { target:"battery", title:{ko:"배터리",en:"Battery"},
+    instr:{ko:"전기를 담아두는 곳이에요. 그래서 콘센트를 안 꽂아도 컴퓨터가 켜져요.",en:"It stores electricity, so the computer runs even without being plugged in."},
+    hint:{ko:"왼쪽 아래 🔋 배터리를 눌러 보세요.",en:"Tap the 🔋 battery at the bottom-left."} },
+  { target:"board", focus:".cap.c1", title:{ko:"메인보드",en:"Motherboard"},
+    instr:{ko:"모든 부품을 연결하는 초록색 판이에요. 도시를 잇는 도로 같아요.",en:"The green board that connects every part. Like roads linking cities together."},
+    hint:{ko:"부품들이 꽂혀 있는 초록색 판(빈 곳)을 눌러 보세요.",en:"Tap the green board itself (an empty spot) that everything plugs into."} },
+  { target:"chip", mode:"chip", focus:".socchip", title:{ko:"놀라운 사실 · 다 합친 칩",en:"The surprise · all in one chip"},
+    instr:{ko:"예전엔 따로였던 CPU·램·저장장치까지, 지금은 손톱만한 칩 하나에 다 들어가요!",en:"The CPU, RAM, and storage that used to be separate now all fit inside one chip the size of a fingernail!"},
+    hint:{ko:"가운데 작은 칩 하나를 눌러 보세요.",en:"Tap the single small chip in the middle."} }
+];
+
+let current=0, doneLock=false, locked=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+
+function loadLevel(i){
+  locked=false; clearFocus();
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent=T(UI.hintPrefix)+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  renderBoard(lv.target,lv.mode,lv.focus,onLevelDone);
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+    setTimeout(()=>{ els.overlay.style.display="none"; doneLock=false;
+      current++; if(current>=levels.length) showFinal(); else loadLevel(current); },1500);
+  },500);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:inside","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.final.style.display="none"; showIntro(0); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+window.addEventListener("resize",()=>{ if(!inIntro) placeFocus(); });
+applyStatic(); showIntro(0);
+</script>
+</body>
+</html>
