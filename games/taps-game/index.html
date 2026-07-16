@@ -125,26 +125,49 @@
     box-shadow:0 6px 16px rgba(99,102,241,.35);}
   .slideBtn:hover{filter:brightness(1.04);}
   .slideBtn.back{background:#fff;color:var(--accent);border:1px solid #dfe4ff;box-shadow:0 3px 8px rgba(0,0,0,.08);padding:14px 22px;}
+
+  /* ===== two-column lesson layout ===== */
+  #app{max-width:1180px;}
+  #topbar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  #topbar #homeBtn,#topbar #langToggle{position:static;top:auto;left:auto;right:auto;}
+  #lessonHead{width:100%;text-align:center;margin-bottom:6px;}
+  #mainView{flex-direction:row;align-items:stretch;gap:18px;}
+  #lessonCol{flex:0 0 40%;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:10px;overflow:auto;}
+  #lessonCol #banner{text-align:left;}
+  #lessonCol #banner .extra{justify-content:flex-start;}
+  #stage{flex:1;min-height:0;}
+  #lessonNav{display:flex;gap:12px;margin-top:8px;padding-top:2px;}
+  #lessonNav .slideBtn{font-size:17px;padding:12px 20px;}
+  @media (max-width:760px){
+    #mainView{flex-direction:column;}
+    #lessonCol{flex:none;max-width:none;overflow:visible;}
+    #stage{min-height:320px;}
+  }
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+  <div id="topbar">
     <a id="homeBtn" href="https://dthoma1.github.io/mom-games/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+  </div>
+  <header id="lessonHead">
     <h1 id="h1"></h1>
     <p class="sub" id="sub"></p>
-    <div id="progressWrap"><div id="progressBar"></div></div>
-    <div id="stepText"></div>
   </header>
   <div id="card">
     <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
     <div id="mainView">
-      <div id="banner">
-        <div class="t" id="bTitle"></div>
-        <div class="i" id="bInstr"></div>
-        <div class="h" id="bHint"></div>
-        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      <div id="lessonCol">
+        <div id="banner">
+          <div class="t" id="bTitle"></div>
+          <div class="i" id="bInstr"></div>
+          <div class="h" id="bHint"></div>
+          <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+        </div>
+        <div id="progressWrap"><div id="progressBar"></div></div>
+        <div id="stepText"></div>
+        <div id="lessonNav"></div>
       </div>
       <div id="stage"></div>
     </div>
@@ -361,6 +384,7 @@ const levels=[
 let current=0;
 const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
   main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  nav:document.getElementById("lessonNav"),
   skip:document.getElementById("skipBtn") };
 const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
 function loadLevel(i){
@@ -371,13 +395,14 @@ function loadLevel(i){
   els.bar.style.width=((i+1)/levels.length*100)+"%";
   const slide=document.createElement("div"); slide.className="slide";
   slide.innerHTML=`<div class="slideArt">${renderArt(lv.art)}</div>`;
-  const nav=document.createElement("div"); nav.className="slideNav";
+  stage.appendChild(slide);
+  const nav=els.nav; nav.innerHTML="";
   if(i>0){ const back=document.createElement("button"); back.className="slideBtn back";
     back.textContent=T(UI.back); back.onclick=()=>{ current=i-1; loadLevel(current); }; nav.appendChild(back); }
   const next=document.createElement("button"); next.className="slideBtn";
   next.textContent=last?T(UI.finishBtn):T(UI.next);
   next.onclick=()=>{ beep(660,.06); if(last){ showFinal(); } else { current=i+1; loadLevel(current); } };
-  nav.appendChild(next); slide.appendChild(nav); stage.appendChild(slide);
+  nav.appendChild(next);
   if(lv.art==="press") setTimeout(()=>{ if(current===i) clack(); },500);
 }
 function showFinal(){ els.main.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:taps","1");}catch(e){}
