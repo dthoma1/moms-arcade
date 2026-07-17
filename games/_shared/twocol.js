@@ -41,6 +41,16 @@
       bar.id = "topbar";
       app.insertBefore(bar, app.firstChild);
       bar.appendChild(home);
+      // Centre the lesson title (h1 + sub) on the same row.
+      var h1 = document.getElementById("h1");
+      var sub = document.getElementById("sub");
+      if (h1 || sub) {
+        var mid = document.createElement("div");
+        mid.id = "topbarTitle";
+        if (h1) mid.appendChild(h1);
+        if (sub) mid.appendChild(sub);
+        bar.appendChild(mid);
+      }
       bar.appendChild(lang);
     }
 
@@ -92,6 +102,11 @@
     var stx = document.getElementById("stepText");
     if (pw) col.appendChild(pw);
     if (stx) col.appendChild(stx);
+
+    // Move the Skip button out of its floating corner spot to below the
+    // progress bar, inside the lesson column.
+    var skip = document.getElementById("skipBtn");
+    if (skip) col.appendChild(skip);
 
     var nav = document.createElement("div");
     nav.id = "lessonNav";
