@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>왜 계정을 따로 만들까요? · 크리에이터 되기</title>
+<style>
+  :root{--bg1:#fff1f2;--bg2:#eef2ff;--ink:#1f2937;--soft:#6b7280;--accent:#ef4444;--accent2:#f472b6;
+    --good:#22c55e;--home:#6366f1;--shop:#ef4444;}
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;touch-action:manipulation;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#fff5f5;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#ffe4e6;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(239,68,68,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;line-height:1.5;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.10);padding:20px;overflow:auto;}
+
+  /* story slide */
+  .story{max-width:640px;text-align:center;}
+  .story .art{font-size:64px;line-height:1.1;margin-bottom:10px;}
+  .story .txt{font-size:18px;line-height:1.7;color:#374151;}
+  .story .txt b{color:var(--accent);}
+  .two{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:6px 0 4px;}
+  .kard{flex:1;min-width:200px;max-width:280px;border-radius:16px;padding:16px;border:2px solid;}
+  .kard.home{border-color:#c7d2fe;background:#eef2ff;}
+  .kard.shop{border-color:#fecaca;background:#fff1f2;}
+  .kard .kt{font-size:34px;}
+  .kard .kn{font-weight:800;font-size:16px;margin:6px 0 4px;}
+  .kard .kd{font-size:13.5px;color:#4b5563;line-height:1.5;}
+  .gotBtn{margin-top:18px;font-size:17px;font-weight:800;color:#fff;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px;
+    box-shadow:0 8px 20px rgba(239,68,68,.35);}
+  .gotBtn:active{transform:translateY(1px);}
+
+  /* sorting */
+  .sortWrap{width:100%;max-width:680px;}
+  .sortItem{display:flex;align-items:center;gap:12px;background:#f9fafb;border:1px solid #eef0f3;border-radius:14px;
+    padding:12px 14px;margin-bottom:12px;transition:.25s;}
+  .sortItem.gone{opacity:0;transform:translateX(20px);height:0;padding:0;margin:0;border:0;overflow:hidden;}
+  .sortItem .emo{font-size:30px;}
+  .sortItem .lbl{flex:1;font-size:16px;font-weight:700;}
+  .binRow{display:flex;gap:8px;}
+  .binBtn{font-size:13.5px;font-weight:800;border-radius:12px;padding:9px 12px;cursor:pointer;border:2px solid;background:#fff;}
+  .binBtn.home{border-color:#c7d2fe;color:#4f46e5;}
+  .binBtn.shop{border-color:#fecaca;color:#dc2626;}
+  .binBtn.wrong{animation:shake .4s;}
+  .binBtn.ok{background:var(--good);border-color:var(--good);color:#fff;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .sortHead{font-size:13px;color:var(--soft);text-align:center;margin-bottom:10px;}
+
+  /* final + overlay */
+  #finalScreen{display:none;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.12);padding:26px;text-align:center;}
+  #finalScreen .tr{font-size:64px;}
+  #finalScreen .big{margin-top:14px;font-size:17px;font-weight:800;color:#fff;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px;}
+  #successOverlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.82);border-radius:18px;
+    flex-direction:column;align-items:center;justify-content:center;z-index:60;}
+  #successOverlay .be{font-size:60px;}
+  #successOverlay .msg{font-size:22px;font-weight:800;margin-top:6px;color:#111827;}
+  .confetti{position:fixed;top:-40px;z-index:200;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9;}}
+  .pulse{animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}50%{box-shadow:0 0 0 10px rgba(239,68,68,0);}}
+</style>
+  <link rel="stylesheet" href="../_shared/twocol.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/"><span class="ko">‹ 수업 목록</span><span class="en">‹ Lessons</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;max-width:620px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:var(--accent);background:#fff1f2;border:1px solid #fecaca;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🎭 왜 계정을 따로 만들까요?",en:"🎭 Why a Separate Account?"},
+  sub:{ko:"개인 생활과 창작 브랜드를 나누면 왜 좋은지 알아봐요 😊",en:"See why keeping personal life and your creator brand separate helps 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  got:{ko:"알겠어요 ›",en:"Got it ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 수업 목록으로",en:"🏠 Back to lessons"},
+  finalTitle:{ko:"준비 완료!",en:"You're ready!"},
+  finalMsg:{ko:"<b>개인 계정</b>은 집처럼 가족·친구를 위한 곳, <b>크리에이터 계정</b>은 가게 간판처럼 세상을 위한 곳이에요. 이제 새 이메일과 인스타그램을 만들어 볼까요? 다음 수업에서 함께해요! 💛",
+            en:"Your <b>personal account</b> is like home — for family and friends. Your <b>creator account</b> is like a shop sign — for the world. Ready to make a new email and Instagram? Let's do it in the next lessons! 💛"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="flex"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<24;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== helpers ===== */
+const stage=document.getElementById("stage");
+function clear(){ stage.innerHTML=""; }
+function gotButton(api){ const b=document.createElement("button"); b.className="gotBtn pulse"; b.textContent=T(UI.got);
+  b.onclick=()=>{ if(doneLock)return; beep(720,.08); api.next(); }; return b; }
+
+/* ===== levels ===== */
+const HOME={ko:"개인 (집)",en:"Personal (home)"};
+const SHOP={ko:"창작 (간판)",en:"Creator (sign)"};
+const levels=[
+  { title:{ko:"작은 이야기로 시작해요",en:"Let's start with a little story"},
+    instr:{ko:"천천히 읽고 <b>알겠어요</b>를 눌러요.",en:"Read gently, then tap <b>Got it</b>."},
+    hint:{ko:"읽고 나서 아래 빨간 버튼을 눌러요.",en:"After reading, tap the red button below."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="art">🏠 ✉️ 🪧</div>
+        <div class="txt">${T({ko:"동네에 빵집을 연 <b>지민</b> 아주머니가 있어요. 집 주소는 가족만 알지만, 가게에는 <b>간판</b>을 달아 누구나 찾아올 수 있게 했어요. 집과 가게를 <b>따로</b> 둔 거예요.",
+        en:"Imagine a baker who opens a little shop. Only family knows her <b>home address</b>, but the shop has a <b>sign</b> so anyone can find it. She keeps home and shop <b>separate</b>."})}</div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } },
+
+  { title:{ko:"온라인에서도 똑같아요",en:"It's the same online"},
+    instr:{ko:"엄마에게는 이미 <b>개인 계정</b>이 있어요. 창작을 위해 <b>새 계정</b>을 하나 더 만들 거예요.",
+           en:"You already have a <b>personal account</b>. For creating, we'll make one <b>new account</b> too."},
+    hint:{ko:"두 계정의 차이를 보고 눌러요.",en:"See the difference, then tap."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="two">
+        <div class="kard home"><div class="kt">🏠</div><div class="kn">${T({ko:"개인 계정",en:"Personal account"})}</div>
+          <div class="kd">${T({ko:"가족·친구를 위한 곳. 손주 사진, 사적인 이야기.",en:"For family & friends. Grandkids' photos, private notes."})}</div></div>
+        <div class="kard shop"><div class="kt">🪧</div><div class="kn">${T({ko:"크리에이터 계정",en:"Creator account"})}</div>
+          <div class="kd">${T({ko:"세상을 위한 곳. 요리 영상, 공개 소식.",en:"For the world. Cooking videos, public posts."})}</div></div>
+      </div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } },
+
+  { title:{ko:"어디에 둘까요? 골라 보세요",en:"Which one? You choose"},
+    instr:{ko:"각 물건이 <b>개인(집)</b>인지 <b>창작(간판)</b>인지 눌러서 정해요.",
+           en:"For each item, tap whether it's <b>Personal (home)</b> or <b>Creator (sign)</b>."},
+    hint:{ko:"손주 사진은 개인, 요리 영상은 창작이에요.",en:"Grandkids' photo is personal; a cooking video is creator."},
+    build(api){ clear();
+      const items=[
+        {emo:"👶",lbl:{ko:"손주 사진",en:"Grandkids' photo"},ans:"home"},
+        {emo:"🍲",lbl:{ko:"요리 영상",en:"Cooking video"},ans:"shop"},
+        {emo:"💬",lbl:{ko:"가족 단체 대화",en:"Family group chat"},ans:"home"},
+        {emo:"📣",lbl:{ko:"공개 소식 알리기",en:"Public announcement"},ans:"shop"},
+      ];
+      const wrap=document.createElement("div"); wrap.className="sortWrap";
+      const head=document.createElement("div"); head.className="sortHead";
+      head.textContent=T({ko:"각 줄에서 알맞은 곳을 눌러요",en:"Tap the right place on each row"});
+      wrap.appendChild(head);
+      let left=items.length;
+      items.forEach(it=>{
+        const row=document.createElement("div"); row.className="sortItem";
+        row.innerHTML=`<span class="emo">${it.emo}</span><span class="lbl">${T(it.lbl)}</span>`;
+        const br=document.createElement("div"); br.className="binRow";
+        [["home",HOME],["shop",SHOP]].forEach(([key,label])=>{
+          const btn=document.createElement("button"); btn.className="binBtn "+key; btn.textContent=T(label);
+          btn.onclick=()=>{ if(doneLock)return;
+            if(key===it.ans){ btn.classList.add("ok"); beep(760,.09); row.classList.add("gone");
+              left--; if(left<=0){ setTimeout(()=>api.done("🗂️",{ko:"딱 맞게 나눴어요!",en:"Sorted just right!"}),260); } }
+            else { btn.classList.add("wrong"); beep(200,.12); setTimeout(()=>btn.classList.remove("wrong"),400); } };
+          br.appendChild(btn);
+        });
+        row.appendChild(br); wrap.appendChild(row);
+      });
+      stage.appendChild(wrap);
+    } },
+
+  { title:{ko:"따로 두면 좋은 점",en:"Why separate is better"},
+    instr:{ko:"계정을 나누면 <b>사생활이 안전</b>하고, <b>전문가처럼</b> 보이고, <b>관리도 쉬워요</b>.",
+           en:"Separating keeps your <b>privacy safe</b>, looks <b>professional</b>, and is <b>easier to manage</b>."},
+    hint:{ko:"세 가지 좋은 점을 보고 눌러요.",en:"See the three benefits, then tap."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="art">🔒 ✨ 🧺</div>
+        <div class="txt">${T({ko:"① <b>안전</b> — 개인 정보가 공개 게시물과 섞이지 않아요.<br>② <b>전문가답게</b> — 브랜드 이름으로 깔끔하게 보여요.<br>③ <b>쉬운 관리</b> — 나중에 도우미에게 맡기거나 켜고 끄기 편해요.",
+          en:"① <b>Safe</b> — personal info stays out of public posts.<br>② <b>Professional</b> — a clean brand name.<br>③ <b>Easy to manage</b> — simple to hand off or switch on and off later."})}</div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } },
+
+  { title:{ko:"이제 무엇을 만들까요",en:"Here's what we'll make"},
+    instr:{ko:"다음 수업에서 <b>새 Gmail</b>, <b>메일 전달</b>, <b>새 인스타그램</b>을 하나씩 만들어요.",
+           en:"In the next lessons we'll make a <b>new Gmail</b>, set up <b>forwarding</b>, and a <b>new Instagram</b>."},
+    hint:{ko:"계획을 보고 마무리해요.",en:"See the plan, then finish."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="two">
+        <div class="kard shop"><div class="kt">📧</div><div class="kn">${T({ko:"새 Gmail",en:"New Gmail"})}</div>
+          <div class="kd">${T({ko:"크리에이터용 이메일 주소",en:"A creator email address"})}</div></div>
+        <div class="kard shop"><div class="kt">↪️</div><div class="kn">${T({ko:"메일 전달",en:"Forwarding"})}</div>
+          <div class="kd">${T({ko:"새 메일을 원래 편지함으로",en:"New mail into your old inbox"})}</div></div>
+        <div class="kard shop"><div class="kt">🔀</div><div class="kn">${T({ko:"새 인스타그램",en:"New Instagram"})}</div>
+          <div class="kd">${T({ko:"계정 전환으로 편하게",en:"Easy with the switcher"})}</div></div>
+      </div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+const api={ done:onLevelDone, next:goNext };
+function loadLevel(i){
+  doneLock=false;
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(api));
+}
+function advance(){ current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function goNext(){ if(doneLock) return; doneLock=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(advance,180); }
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },350);
+  setTimeout(()=>{ els.overlay.style.display="none"; advance(); },1900);
+}
+function skipLevel(){ if(doneLock) return; advance(); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="flex";
+  try{localStorage.setItem("momHub:done:creatorwhy","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+<script src="../_shared/twocol.js"></script>
+</body>
+</html>

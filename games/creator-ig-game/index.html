@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>새 인스타그램과 계정 전환 · 크리에이터 되기</title>
+<style>
+  :root{--bg1:#fff1f2;--bg2:#eef2ff;--ink:#1f2937;--soft:#6b7280;--accent:#ef4444;--accent2:#f472b6;--good:#22c55e;
+    --ig1:#f58529;--ig2:#dd2a7b;--ig3:#8134af;}
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;touch-action:manipulation;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;} .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn .en{display:none;} html[lang="en"] #homeBtn .ko{display:none;} html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#ffe4e6;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(239,68,68,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;} #banner .i{font-size:15px;margin-top:2px;line-height:1.5;} #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(#faf7ff,#f2eefb);border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.10);padding:14px;overflow:auto;}
+
+  /* phone */
+  .phone{width:270px;min-height:430px;background:#fff;border-radius:30px;box-shadow:0 16px 40px rgba(0,0,0,.22);
+    border:8px solid #111;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+  .notch{height:20px;background:#111;} .notch::after{content:"";display:block;width:70px;height:14px;background:#111;border-radius:0 0 12px 12px;margin:0 auto;}
+  .igtop{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 14px;border-bottom:1px solid #efefef;position:relative;}
+  .igtop .uname{font-weight:800;font-size:16px;} .igtop .chev{font-size:12px;color:#333;}
+  .igtop .add{position:absolute;right:14px;font-size:18px;color:#111;}
+  .igbody{flex:1;padding:14px;overflow:auto;}
+  .prohead{display:flex;align-items:center;gap:14px;}
+  .avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(45deg,var(--ig1),var(--ig2),var(--ig3));display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;}
+  .stats{display:flex;gap:16px;font-size:13px;text-align:center;} .stats b{display:block;font-size:15px;}
+  .signup{text-align:center;padding:8px;}
+  .iglogo{font-size:26px;font-weight:700;background:linear-gradient(45deg,var(--ig1),var(--ig2),var(--ig3));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px;font-family:cursive;}
+  .igfield{border:1px solid #dbdbdb;background:#fafafa;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:10px;text-align:left;color:#262626;}
+  .igbtn{background:#0095f6;color:#fff;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;width:100%;}
+  .ignav{display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #efefef;font-size:20px;}
+  .ignav .navav{width:26px;height:26px;border-radius:50%;background:linear-gradient(45deg,var(--ig1),var(--ig2),var(--ig3));}
+  .ignav .navav.on{box-shadow:0 0 0 2px #111;}
+  /* switcher sheet */
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:14px;}
+  .sheet .sh{width:38px;height:4px;background:#ddd;border-radius:999px;margin:0 auto 12px;}
+  .acct{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer;font-size:15px;}
+  .acct .ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;}
+  .acct .ico.personal{background:linear-gradient(45deg,#6366f1,#8b93ff);} .acct .ico.creator{background:linear-gradient(45deg,var(--ig1),var(--ig2),var(--ig3));}
+  .acct .nm{flex:1;font-weight:700;} .acct .chk{color:#0095f6;font-size:18px;}
+  .acct.add2{color:#0095f6;font-weight:700;}
+  .acct.add2 .ico{background:#eaf5ff;color:#0095f6;font-size:22px;}
+  .createSheet .opt{border:1px solid #dbdbdb;border-radius:10px;padding:12px;margin-bottom:10px;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;color:#262626;}
+
+  .story{max-width:600px;text-align:center;} .story .art{font-size:56px;} .story .txt{font-size:17px;line-height:1.7;color:#374151;} .story .txt b{color:var(--accent);}
+  .gotBtn{margin-top:16px;font-size:17px;font-weight:800;color:#fff;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px;box-shadow:0 8px 20px rgba(239,68,68,.35);}
+  .gotBtn:active{transform:translateY(1px);}
+  .pulse{animation:pulse 1.2s infinite;} @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(221,42,123,.5);}50%{box-shadow:0 0 0 9px rgba(221,42,123,0);}}
+  .pulseR{animation:pulseR 1.2s infinite;} @keyframes pulseR{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}50%{box-shadow:0 0 0 10px rgba(239,68,68,0);}}
+  .pulseB{animation:pulseB 1.2s infinite;border-radius:8px;} @keyframes pulseB{0%,100%{box-shadow:0 0 0 0 rgba(0,149,246,.5);}50%{box-shadow:0 0 0 9px rgba(0,149,246,0);}}
+  .tapme{cursor:pointer;}
+
+  #finalScreen{display:none;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.12);padding:26px;text-align:center;}
+  #finalScreen .tr{font-size:64px;}
+  #finalScreen .big{margin-top:14px;font-size:17px;font-weight:800;color:#fff;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px;}
+  #successOverlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.82);border-radius:18px;
+    flex-direction:column;align-items:center;justify-content:center;z-index:60;}
+  #successOverlay .be{font-size:60px;} #successOverlay .msg{font-size:22px;font-weight:800;margin-top:6px;color:#111827;}
+  .confetti{position:fixed;top:-40px;z-index:200;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9;}}
+</style>
+  <link rel="stylesheet" href="../_shared/twocol.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/"><span class="ko">‹ 수업 목록</span><span class="en">‹ Lessons</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner"><div class="t" id="bTitle"></div><div class="i" id="bInstr"></div><div class="h" id="bHint"></div></div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;max-width:620px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:var(--accent);background:#fff1f2;border:1px solid #fecaca;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🔀 새 인스타그램과 계정 전환",en:"🔀 New Instagram & Switcher"},
+  sub:{ko:"창작용 인스타그램을 만들고, 로그아웃 없이 계정을 오가요 😊",en:"Make a creator Instagram and switch accounts without logging out 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, got:{ko:"알겠어요 ›",en:"Got it ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 수업 목록으로",en:"🏠 Back to lessons"},
+  finalTitle:{ko:"두 계정 준비 완료!",en:"Two accounts, ready!"},
+  finalMsg:{ko:"이제 <b>개인</b>과 <b>크리에이터</b> 인스타그램을 <b>계정 전환</b>으로 톡 하고 오갈 수 있어요. 로그아웃할 필요 없어요! 크리에이터로 첫 게시물을 올릴 준비가 됐어요. 정말 잘하셨어요! 💛",
+            en:"You can now tap between your <b>personal</b> and <b>creator</b> Instagram with the <b>account switcher</b> — no logging out! You're ready to post as a creator. Wonderful work! 💛"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="flex"){ els.step.textContent=T(UI.finalStep); } else if(!doneLock){ loadLevel(current); } }
+
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<24;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+const stage=document.getElementById("stage");
+function clear(){ stage.innerHTML=""; }
+const PERSONAL="mom_official", CREATOR="moms.kitchen";
+function phone(topInner,bodyInner,navOnCreator){
+  return `<div class="phone"><div class="notch"></div>
+    <div class="igtop">${topInner}</div>
+    <div class="igbody">${bodyInner}</div>
+    <div class="ignav"><span>🏠</span><span>🔍</span><span>➕</span><span>❤️</span><span class="navav ${navOnCreator?'':'on'}"></span></div>
+  </div>`;
+}
+function gotButton(api){ const b=document.createElement("button"); b.className="gotBtn pulseR"; b.textContent=T(UI.got);
+  b.onclick=()=>{ if(doneLock)return; beep(720,.08); api.next(); }; return b; }
+
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"‘계정 전환’이 뭐예요?",en:"What is the ‘account switcher’?"},
+    instr:{ko:"인스타그램은 계정을 <b>여러 개</b> 담아 두고, 로그아웃 없이 <b>톡 하고 전환</b>할 수 있어요. 개인용과 창작용을 오가기 딱 좋아요.",
+           en:"Instagram can hold <b>several accounts</b> and let you <b>tap to switch</b> without logging out — perfect for personal and creator."},
+    hint:{ko:"그림을 보고 알겠어요를 눌러요.",en:"See the picture, then tap Got it."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="art">📱 🔀</div>
+        <div class="txt">${T({ko:"한 휴대폰에서 <b>@"+PERSONAL+"</b>(개인)과 <b>@"+CREATOR+"</b>(창작)를 함께 쓰고, 위쪽 이름을 눌러 <b>전환</b>해요.",
+          en:"On one phone, keep <b>@"+PERSONAL+"</b> (personal) and <b>@"+CREATOR+"</b> (creator), and <b>switch</b> by tapping the name at the top."})}</div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } },
+
+  { title:{ko:"내 프로필 열기",en:"Open your profile"},
+    instr:{ko:"먼저 지금 쓰는 개인 계정에서 시작해요. 오른쪽 아래 <b>내 사진(프로필)</b>을 눌러요.",
+           en:"Start from your current personal account. Tap your <b>profile picture</b> at the bottom right."},
+    hint:{ko:"오른쪽 아래 동그란 사진을 눌러요.",en:"Tap the round picture at the bottom right."},
+    build(api){ clear();
+      const d=document.createElement("div"); d.innerHTML=phone(
+        `<span class="uname">Instagram</span>`,
+        `<div style="text-align:center;color:#8e8e8e;font-size:14px;padding-top:30px;">${T({ko:"홈 화면",en:"Home feed"})} 🏠</div>`, false);
+      stage.appendChild(d);
+      const av=d.querySelector(".ignav .navav"); av.classList.add("pulse");
+      av.onclick=()=>{ if(doneLock)return; beep(760,.09); api.done("👤",{ko:"프로필을 열었어요!",en:"Opened your profile!"}); };
+    } },
+
+  { title:{ko:"위쪽 이름을 눌러요",en:"Tap your name at the top"},
+    instr:{ko:"맨 위 <b>계정 이름(▾)</b>을 누르면 계정 전환 메뉴가 열려요.",en:"Tap your <b>account name (▾)</b> at the very top to open the switch menu."},
+    hint:{ko:"반짝이는 이름과 작은 화살표를 눌러요.",en:"Tap the glowing name with the small arrow."},
+    build(api){ clear();
+      const d=document.createElement("div"); d.innerHTML=phone(
+        `<span class="uname tapme" id="unm">${PERSONAL}</span><span class="chev">▾</span><span class="add">☰</span>`,
+        `<div class="prohead"><div class="avatar">👩</div>
+          <div class="stats"><div><b>12</b>${T({ko:"게시물",en:"posts"})}</div><div><b>340</b>${T({ko:"팔로워",en:"followers"})}</div><div><b>210</b>${T({ko:"팔로잉",en:"following"})}</div></div></div>
+          <div style="margin-top:12px;font-weight:700;">${T({ko:"엄마 (개인)",en:"Mom (personal)"})}</div>`, false);
+      stage.appendChild(d);
+      const unm=document.getElementById("unm"); unm.parentElement.classList.add("pulse"); unm.parentElement.style.borderRadius="10px";
+      const open=()=>{ if(doneLock)return; beep(760,.09); api.done("🔽",{ko:"계정 전환 메뉴가 열렸어요!",en:"Switch menu opened!"}); };
+      unm.onclick=open; d.querySelector(".chev").onclick=open;
+    } },
+
+  { title:{ko:"‘계정 추가’ 누르기",en:"Tap ‘Add account’"},
+    instr:{ko:"아래 메뉴에서 <b>＋ 계정 추가</b>를 누른 뒤, <b>새 계정 만들기</b>를 눌러요.",
+           en:"In the menu, tap <b>＋ Add account</b>, then <b>Create new account</b>."},
+    hint:{ko:"파란 ‘계정 추가’ → ‘새 계정 만들기’ 순서예요.",en:"Blue ‘Add account’ → ‘Create new account’."},
+    build(api){ clear();
+      const d=document.createElement("div"); d.innerHTML=phone(
+        `<span class="uname">${PERSONAL}</span><span class="chev">▾</span>`,
+        `<div style="height:150px;"></div>`, false);
+      const phoneEl=d.querySelector(".phone");
+      const sheet=document.createElement("div"); sheet.className="sheet";
+      sheet.innerHTML=`<div class="sh"></div>
+        <div class="acct"><div class="ico personal">👩</div><div class="nm">${PERSONAL}</div><div class="chk">✓</div></div>
+        <div class="acct add2 tapme" id="addAcct"><div class="ico">＋</div><div class="nm">${T({ko:"계정 추가",en:"Add account"})}</div></div>`;
+      phoneEl.appendChild(sheet); stage.appendChild(d);
+      const addAcct=document.getElementById("addAcct"); addAcct.classList.add("pulse");
+      addAcct.onclick=()=>{ if(doneLock)return; beep(700,.06);
+        sheet.className="sheet createSheet";
+        sheet.innerHTML=`<div class="sh"></div>
+          <div class="opt tapme pulse" id="createNew">${T({ko:"새 계정 만들기",en:"Create new account"})}</div>
+          <div class="opt" style="color:#8e8e8e;font-weight:600;">${T({ko:"기존 계정으로 로그인",en:"Log in to existing account"})}</div>`;
+        document.getElementById("createNew").onclick=()=>{ if(doneLock)return; beep(760,.09);
+          api.done("🆕",{ko:"새 계정 만들기를 골랐어요!",en:"Chose to create a new account!"}); };
+      };
+    } },
+
+  { title:{ko:"창작용 아이디 정하고 가입",en:"Pick a creator handle & sign up"},
+    instr:{ko:"창작용 <b>사용자 이름(@아이디)</b>을 정해요. 가입에는 방금 만든 <b>새 Gmail</b>과 비밀번호를 써요. 준비됐으니 <b>가입하기</b>를 눌러요.",
+           en:"Choose a creator <b>username (@handle)</b>. Sign up with the <b>new Gmail</b> and password you just made. It's ready — tap <b>Sign up</b>."},
+    hint:{ko:"파란 ‘가입하기’ 단추를 눌러요.",en:"Tap the blue ‘Sign up’ button."},
+    build(api){ clear();
+      const d=document.createElement("div"); d.innerHTML=phone(
+        `<span class="uname">${T({ko:"가입",en:"Sign up"})}</span>`,
+        `<div class="signup"><div class="iglogo">Instagram</div>
+          <div class="igfield">📧 mom.cooking@gmail.com</div>
+          <div class="igfield">👤 @${CREATOR}</div>
+          <div class="igfield">🔒 ••••••••••••</div>
+          <button class="igbtn pulseB tapme" id="signup">${T({ko:"가입하기",en:"Sign up"})}</button></div>`, false);
+      stage.appendChild(d);
+      document.getElementById("signup").onclick=()=>{ if(doneLock)return; beep(760,.09);
+        api.done("🎨",{ko:"창작 계정을 만들었어요!",en:"Creator account created!"}); };
+    } },
+
+  { title:{ko:"두 계정 사이를 전환해요",en:"Switch between the two"},
+    instr:{ko:"이제 전환 메뉴에 <b>두 계정</b>이 다 있어요. <b>@"+CREATOR+"</b>(창작)를 눌러 그 계정으로 바꿔 보세요.",
+           en:"Now the switch menu has <b>both accounts</b>. Tap <b>@"+CREATOR+"</b> (creator) to switch to it."},
+    hint:{ko:"아래 창작 계정 줄을 눌러요.",en:"Tap the creator account row below."},
+    build(api){ clear();
+      const d=document.createElement("div"); d.innerHTML=phone(
+        `<span class="uname">${PERSONAL}</span><span class="chev">▾</span>`,
+        `<div style="height:150px;"></div>`, false);
+      const phoneEl=d.querySelector(".phone");
+      const sheet=document.createElement("div"); sheet.className="sheet";
+      sheet.innerHTML=`<div class="sh"></div>
+        <div class="acct"><div class="ico personal">👩</div><div class="nm">${PERSONAL}</div><div class="chk">✓</div></div>
+        <div class="acct tapme" id="toCreator"><div class="ico creator">🍲</div><div class="nm">${CREATOR}</div></div>
+        <div class="acct add2"><div class="ico">＋</div><div class="nm">${T({ko:"계정 추가",en:"Add account"})}</div></div>`;
+      phoneEl.appendChild(sheet); stage.appendChild(d);
+      const toCreator=document.getElementById("toCreator"); toCreator.classList.add("pulse");
+      toCreator.onclick=()=>{ if(doneLock)return; beep(820,.1);
+        api.done("🔀",{ko:"창작 계정으로 전환했어요!",en:"Switched to your creator account!"}); };
+    } },
+
+  { title:{ko:"준비 완료!",en:"All set!"},
+    instr:{ko:"이제 위쪽 이름만 누르면 <b>개인</b>과 <b>창작</b> 계정을 언제든 오갈 수 있어요.",
+           en:"From now on, just tap the name at the top to move between your <b>personal</b> and <b>creator</b> accounts anytime."},
+    hint:{ko:"마지막이에요. 마무리를 눌러요.",en:"Last one. Tap to finish."},
+    info:true,
+    build(api){ clear();
+      const d=document.createElement("div"); d.className="story";
+      d.innerHTML=`<div class="art">👩 🔀 🍲</div>
+        <div class="txt">${T({ko:"<b>@"+PERSONAL+"</b> ↔ <b>@"+CREATOR+"</b> — 톡 한 번으로 오가요.",
+          en:"<b>@"+PERSONAL+"</b> ↔ <b>@"+CREATOR+"</b> — one tap to switch."})}</div>`;
+      d.appendChild(gotButton(api)); stage.appendChild(d);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+const api={ done:onLevelDone, next:goNext };
+function loadLevel(i){ doneLock=false; const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length); els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(api)); }
+function advance(){ current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function goNext(){ if(doneLock) return; doneLock=true; els.bar.style.width=((current+1)/levels.length*100)+"%"; setTimeout(advance,180); }
+function onLevelDone(emoji,msg){ if(doneLock) return; doneLock=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{ els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime(); },350);
+  setTimeout(()=>{ els.overlay.style.display="none"; advance(); },1900); }
+function skipLevel(){ if(doneLock) return; advance(); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="flex";
+  try{localStorage.setItem("momHub:done:creatorig","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+<script src="../_shared/twocol.js"></script>
+</body>
+</html>
